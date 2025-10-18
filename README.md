@@ -1,0 +1,97 @@
+# pce-mcp
+
+A production-ready [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for [Pextra CloudEnvironment®](https://pextra.cloud/cloudenvironment).
+
+Manage your Pextra CloudEnvironment® resources using MCP-compatible clients and tools.
+
+## Install
+
+1. Download the latest release binary from the [Releases](https://github.com/PextraCloud/pce-mcp/releases) page for your platform.
+
+2. Follow the [Configuration](#configuration) and [Usage](#usage) sections below to run the server.
+
+3. Connect your MCP-compatible clients and tools to the server and begin prompting!
+
+This produces the `pce-mcp` binary in the repository root when using `go build`.
+
+## Configuration
+
+You can configure the server using flags or environment variables. Flags override environment variables.
+
+Flags:
+
+-   `--base-url` (required): Pextra CloudEnvironment® base URL (e.g., `https://192.168.1.27:5007`).
+-   `--sse-addr` (default `:2222`): SSE server listen address; set to empty string to disable.
+-   `--http-addr` (default `:2223`): HTTP server listen address; set to empty string to disable.
+-   `--pce-insecure-tls` (default `false`): Disable TLS verification for the PCE API client. This exposes you to man-in-the-middle attacks and is not recommended for production use.
+-   `--timeout` (default `10`): PCE API request timeout in seconds.
+
+Environment variables (fallbacks if corresponding flag is not set):
+
+-   `PCE_BASE_URL`
+-   `SSE_ADDR`
+-   `HTTP_ADDR`
+-   `PCE_INSECURE_TLS` (e.g., `true`/`false`)
+-   `PCE_TIMEOUT_SECONDS` (integer seconds)
+
+## Usage
+
+Run the server:
+
+```bash
+./pce-mcp serve --base-url "https://localhost:5007"
+```
+
+Disable one of the transports by passing an empty address:
+
+```bash
+# Disable SSE
+./pce-mcp serve --base-url "https://localhost:5007" --sse-addr=
+
+# Disable HTTP
+./pce-mcp serve --base-url "https://localhost:5007" --http-addr=
+```
+
+Use environment variables as fallbacks:
+
+```bash
+export PCE_BASE_URL="https://localhost:5007"
+export SSE_ADDR=":3000"
+export HTTP_ADDR=":3001"
+export PCE_INSECURE_TLS=true
+export PCE_TIMEOUT_SECONDS=15
+./pce-mcp serve
+```
+
+## Development
+
+Build:
+
+```bash
+go build ./...
+```
+
+Run:
+
+```bash
+go run ./... serve --base-url "https://localhost:5007"
+```
+
+### Tests
+
+Integration tests (Linux only, optional tools required; some tests may need root):
+
+```bash
+go test -v -tags=integration -cover ./...
+```
+
+Coverage report:
+
+```bash
+go test -v -tags=integration -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
+```
+
+## License
+
+This repository is licensed under the [Apache License 2.0](./LICENSE).
