@@ -23,16 +23,16 @@ Flags:
 -   `--base-url` (required): Pextra CloudEnvironment® base URL (e.g., `https://192.168.1.27:5007`).
 -   `--sse-addr` (default `:2222`): SSE server listen address; set to empty string to disable.
 -   `--http-addr` (default `:2223`): HTTP server listen address; set to empty string to disable.
--   `--pce-insecure-tls` (default `false`): Disable TLS verification for the PCE API client. This exposes you to man-in-the-middle attacks and is not recommended for production use.
+-   `--tls-skip-verify` (default `false`): Disable TLS verification for the PCE API client. This exposes you to man-in-the-middle attacks and is not recommended for production use.
 -   `--timeout` (default `10`): PCE API request timeout in seconds.
 
 Environment variables (fallbacks if corresponding flag is not set):
 
--   `PCE_BASE_URL`
+-   `BASE_URL`
 -   `SSE_ADDR`
 -   `HTTP_ADDR`
--   `PCE_INSECURE_TLS` (e.g., `true`/`false`)
--   `PCE_TIMEOUT_SECONDS` (integer seconds)
+-   `TLS_SKIP_VERIFY` (e.g., `true`/`false`)
+-   `TIMEOUT` (integer seconds)
 
 ## Usage
 
@@ -55,11 +55,11 @@ Disable one of the transports by passing an empty address:
 Use environment variables as fallbacks:
 
 ```bash
-export PCE_BASE_URL="https://localhost:5007"
+export BASE_URL="https://localhost:5007"
 export SSE_ADDR=":3000"
 export HTTP_ADDR=":3001"
-export PCE_INSECURE_TLS=true
-export PCE_TIMEOUT_SECONDS=15
+export TLS_SKIP_VERIFY=true
+export TIMEOUT=15
 ./pce-mcp serve
 ```
 
