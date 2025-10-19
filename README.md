@@ -23,7 +23,8 @@ Flags:
 -   `--base-url` (required): Pextra CloudEnvironment® base URL (e.g., `https://192.168.1.27:5007`).
 -   `--sse-addr` (default `:2222`): SSE server listen address; set to empty string to disable.
 -   `--http-addr` (default `:2223`): HTTP server listen address; set to empty string to disable.
--   `--tls-skip-verify` (default `false`): Disable TLS verification for the PCE API client. This exposes you to man-in-the-middle attacks and is not recommended for production use.
+-   `--tls-ca-cert` (default `""`): Path to a custom CA certificate file for the PCE API client. If set, TLS verification will use this CA instead of the system CAs. Mutually exclusive with `--tls-skip-verify`.
+-   `--tls-skip-verify` (default `false`): Disable TLS verification for the PCE API client. This exposes you to man-in-the-middle attacks and is not recommended for production use. Mutually exclusive with `--tls-ca-cert`.
 -   `--timeout` (default `10`): PCE API request timeout in seconds.
 
 Environment variables (fallbacks if corresponding flag is not set):
@@ -31,6 +32,7 @@ Environment variables (fallbacks if corresponding flag is not set):
 -   `BASE_URL`
 -   `SSE_ADDR`
 -   `HTTP_ADDR`
+-   `TLS_CA_CERT` (file path)
 -   `TLS_SKIP_VERIFY` (e.g., `true`/`false`)
 -   `TIMEOUT` (integer seconds)
 
