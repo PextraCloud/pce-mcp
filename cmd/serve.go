@@ -21,6 +21,7 @@ var (
 	flagHTTPAddr       string
 	flagPCEBaseURL     string
 	flagInsecureTLS    bool
+	flagCACertPath     string
 	flagTimeoutSeconds int
 )
 
@@ -31,6 +32,7 @@ func init() {
 	serveCmd.Flags().StringVar(&flagHTTPAddr, "http-addr", ":2223", fmt.Sprintf("HTTP server listen address, set to empty string to disable, overridable via %s env var", config.EnvHTTPAddr))
 	serveCmd.Flags().StringVar(&flagPCEBaseURL, "base-url", "", fmt.Sprintf("Pextra CloudEnvironment(R) base URL (e.g., https://192.168.1.27:5007), overridable via %s env var", config.EnvBaseURL))
 	serveCmd.Flags().BoolVar(&flagInsecureTLS, "tls-skip-verify", false, fmt.Sprintf("Skip TLS certificate verification for Pextra CloudEnvironment(R) API client. This may make you vulnerable to man-in-the-middle attacks; overridable via %s env var", config.EnvTLSSkipVerify))
+	serveCmd.Flags().StringVar(&flagCACertPath, "tls-ca-cert", "", fmt.Sprintf("Path to PEM file with CA certificate(s) to trust for PCE API (use instead of --tls-skip-verify). Overridable via %s env var", config.EnvCACert))
 	serveCmd.Flags().IntVar(&flagTimeoutSeconds, "timeout", 10, fmt.Sprintf("Timeout in seconds for Pextra CloudEnvironment(R) API client requests, overridable via %s env var", config.EnvTimeout))
 }
 
@@ -44,6 +46,7 @@ var serveCmd = &cobra.Command{
 			HTTPAddr:          flagHTTPAddr,
 			PCEBaseURL:        flagPCEBaseURL,
 			PCEInsecureTLS:    flagInsecureTLS,
+			PCECACertPath:     flagCACertPath,
 			PCEDefaultTimeout: time.Duration(flagTimeoutSeconds) * time.Second,
 		})
 		if err != nil {
@@ -52,7 +55,7 @@ var serveCmd = &cobra.Command{
 		config.Set(*c)
 
 		// Construct client to validate config
-		if _, err := api.NewClient(c.PCEBaseURL, c.PCEInsecureTLS, c.PCEDefaultTimeout); err != nil {
+		if _, err := api.NewClient(c.PCEBaseURL, c.PCEInsecureTLS, c.PCEDefaultTimeout, c.PCECACertPath); err != nil {
 			return err
 		}
 

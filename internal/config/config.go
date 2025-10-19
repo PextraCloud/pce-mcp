@@ -29,6 +29,7 @@ const (
 	EnvBaseURL       = "BASE_URL"
 	EnvTLSSkipVerify = "TLS_SKIP_VERIFY"
 	EnvTimeout       = "TIMEOUT"
+	EnvCACert        = "TLS_CA_CERT"
 )
 
 // AppConfig holds runtime configuration for the server and API client.
@@ -40,6 +41,7 @@ type AppConfig struct {
 	// PCE API client
 	PCEBaseURL        string
 	PCEInsecureTLS    bool
+	PCECACertPath     string
 	PCEDefaultTimeout time.Duration
 }
 
@@ -70,6 +72,11 @@ func WithEnvDefaults(c AppConfig) (*AppConfig, error) {
 			c.PCEBaseURL = v
 		}
 	}
+	if c.PCECACertPath == "" {
+		if v := os.Getenv(EnvCACert); v != "" {
+			c.PCECACertPath = v
+		}
+	}
 
 	// Booleans: apply env if provided (validate on parse failure)
 	if v := os.Getenv(EnvTLSSkipVerify); v != "" {
@@ -95,7 +102,7 @@ func WithEnvDefaults(c AppConfig) (*AppConfig, error) {
 
 	// Require at least one listen address
 	if c.HTTPAddr == "" && c.SSEAddr == "" {
-		errs = append(errs, "at least one of %s or %s must be set", EnvHTTPAddr, EnvSSEAddr)
+		errs = append(errs, fmt.Sprintf("at least one of %s or %s must be set", EnvHTTPAddr, EnvSSEAddr))
 	}
 
 	// PCE base URL required and must look like http:// or https://
@@ -108,9 +115,21 @@ func WithEnvDefaults(c AppConfig) (*AppConfig, error) {
 		}
 	}
 
+	// Validate CA cert path if provided
+	if c.PCECACertPath != "" {
+		if _, err := os.Stat(c.PCECACertPath); err != nil {
+			errs = append(errs, fmt.Sprintf("%s points to invalid path: %v", EnvCACert, err))
+		}
+	}
+
+	// TLS flags mutual exclusivity: don't allow both skip-verify and custom CA
+	if c.PCEInsecureTLS && c.PCECACertPath != "" {
+		errs = append(errs, fmt.Sprintf("only one of %s or %s may be set", EnvTLSSkipVerify, EnvCACert))
+	}
+
 	// Timeout must be positive
 	if c.PCEDefaultTimeout <= 0 {
-		errs = append(errs, "%s must be > 0 (seconds)", EnvTimeout)
+		errs = append(errs, fmt.Sprintf("%s must be > 0 (seconds)", EnvTimeout))
 	}
 
 	if len(errs) > 0 {

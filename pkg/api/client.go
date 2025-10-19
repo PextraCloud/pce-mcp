@@ -18,11 +18,13 @@ package api
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 )
@@ -35,13 +37,40 @@ type Client struct {
 }
 
 // Construct a new Client.
-func NewClient(baseURL string, insecureSkipVerify bool, timeout time.Duration) (*Client, error) {
+func NewClient(baseURL string, insecureSkipVerify bool, timeout time.Duration, caCertPath string) (*Client, error) {
+	if insecureSkipVerify && caCertPath != "" {
+		return nil, WrapAPIError(fmt.Errorf("insecure skip verify and custom CA are mutually exclusive"), 0, "invalid TLS configuration")
+	}
+
 	u, err := url.Parse(strings.TrimRight(baseURL, "/"))
 	if err != nil {
 		return nil, WrapAPIError(err, 0, "invalid base URL")
 	}
+
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: insecureSkipVerify,
+	}
+
+	// If CA cert path was provided, load and append to system cert pool.
+	if caCertPath != "" {
+		certPEM, err := os.ReadFile(caCertPath)
+		if err != nil {
+			return nil, WrapAPIError(err, 0, "failed to read CA cert file")
+		}
+		pool, err := x509.SystemCertPool()
+		if err != nil {
+			// If system pool isn't available, create a new one.
+			pool = x509.NewCertPool()
+		}
+		if !pool.AppendCertsFromPEM(certPEM) {
+			return nil, WrapAPIError(fmt.Errorf("failed to parse CA cert file"), 0, "invalid CA certificate")
+		}
+		tlsConfig.RootCAs = pool
+		tlsConfig.InsecureSkipVerify = false
+	}
+
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureSkipVerify},
+		TLSClientConfig: tlsConfig,
 	}
 	httpClient := &http.Client{Transport: transport, Timeout: timeout}
 	return &Client{
