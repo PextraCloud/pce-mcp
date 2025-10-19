@@ -225,7 +225,7 @@ func handleGetNodeStoragePoolsById(ctx context.Context, req mcp.CallToolRequest)
 
 func GetNodePciDevicesById() (mcp.Tool, server.ToolHandlerFunc) {
 	return mcp.NewTool("get_node_pcidevices_by_id",
-		mcp.WithDescription("Retrieve PCI device information for a specific node."),
+		mcp.WithDescription("Retrieve PCI device information for a specific node. Use this tool if the user asks for GPUs, which are PCI devices."),
 		mcp.WithToolAnnotation(mcp.ToolAnnotation{
 			Title:        "Get Node PCI Devices By ID",
 			ReadOnlyHint: mcp.ToBoolPtr(true),

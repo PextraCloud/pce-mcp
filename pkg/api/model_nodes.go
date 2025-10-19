@@ -58,7 +58,7 @@ type NodeHardwareCpu struct {
 		Efficiency  int `json:"efficiency"`
 	} `json:"cores"`
 	Processors            int      `json:"processors"`
-	Socket                int      `json:"socket"`
+	Sockets               int      `json:"sockets"`
 	Flags                 []string `json:"flags"`
 	VirtualizationSupport bool     `json:"virtualization"`
 }
@@ -92,8 +92,8 @@ type NodeHardwareDisk struct {
 type NodeHardwareUsb struct {
 	Bus       int    `json:"bus"`
 	Device    int    `json:"device"`
-	VendorId  int    `json:"vendor_id"`
-	ProductId int    `json:"product_id"`
+	VendorId  string `json:"vendor_id"`
+	ProductId string `json:"product_id"`
 	Vendor    string `json:"vendor"`
 	Name      string `json:"name"`
 	Type      string `json:"type"`
