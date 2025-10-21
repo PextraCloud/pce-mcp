@@ -26,6 +26,7 @@ Flags:
 -   `--tls-ca-cert` (default `""`): Path to a custom CA certificate file for the PCE API client. If set, TLS verification will use this CA instead of the system CAs. Mutually exclusive with `--tls-skip-verify`.
 -   `--tls-skip-verify` (default `false`): Disable TLS verification for the PCE API client. This exposes you to man-in-the-middle attacks and is not recommended for production use. Mutually exclusive with `--tls-ca-cert`.
 -   `--timeout` (default `10`): PCE API request timeout in seconds.
+-   `--headers` (default `""`): Custom HTTP headers to include in the PCE API client requests, formatted as a key=value pairs, can be specified multiple times. Example: `--headers "Authorization=Basic xxx" --headers "X-Custom-Header=Value"`.
 
 Environment variables (fallbacks if corresponding flag is not set):
 
