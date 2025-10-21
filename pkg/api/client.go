@@ -37,7 +37,7 @@ type Client struct {
 }
 
 // Construct a new Client.
-func NewClient(baseURL string, insecureSkipVerify bool, timeout time.Duration, caCertPath string) (*Client, error) {
+func NewClient(baseURL string, insecureSkipVerify bool, timeout time.Duration, caCertPath string, customHeaders http.Header) (*Client, error) {
 	if insecureSkipVerify && caCertPath != "" {
 		return nil, WrapAPIError(fmt.Errorf("insecure skip verify and custom CA are mutually exclusive"), 0, "invalid TLS configuration")
 	}
@@ -73,11 +73,19 @@ func NewClient(baseURL string, insecureSkipVerify bool, timeout time.Duration, c
 		TLSClientConfig: tlsConfig,
 	}
 	httpClient := &http.Client{Transport: transport, Timeout: timeout}
+
+	// Custom HTTP headers
+	headers := make(http.Header)
+	for k, vals := range customHeaders {
+		for _, v := range vals {
+			headers.Add(k, v)
+		}
+	}
 	return &Client{
 		HTTP:      httpClient,
 		BaseURL:   u,
 		APIPrefix: "/api",
-		Headers:   make(http.Header),
+		Headers:   headers,
 	}, nil
 }
 

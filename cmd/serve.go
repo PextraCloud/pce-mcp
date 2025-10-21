@@ -23,6 +23,7 @@ var (
 	flagInsecureTLS    bool
 	flagCACertPath     string
 	flagTimeoutSeconds int
+	headers            map[string]string
 )
 
 func init() {
@@ -34,12 +35,19 @@ func init() {
 	serveCmd.Flags().BoolVar(&flagInsecureTLS, "tls-skip-verify", false, fmt.Sprintf("Skip TLS certificate verification for Pextra CloudEnvironment(R) API client. This may make you vulnerable to man-in-the-middle attacks; overridable via %s env var", config.EnvTLSSkipVerify))
 	serveCmd.Flags().StringVar(&flagCACertPath, "tls-ca-cert", "", fmt.Sprintf("Path to PEM file with CA certificate(s) to trust for PCE API (use instead of --tls-skip-verify). Overridable via %s env var", config.EnvCACert))
 	serveCmd.Flags().IntVar(&flagTimeoutSeconds, "timeout", 10, fmt.Sprintf("Timeout in seconds for Pextra CloudEnvironment(R) API client requests, overridable via %s env var", config.EnvTimeout))
+	serveCmd.Flags().StringToStringVar(&headers, "headers", nil, "Custom headers to add to each PCE API request, in key=value format, can be specified multiple times")
 }
 
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the MCP server",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Convert headers (`map[string]string`) to `http.Header`
+		httpHeaders := http.Header{}
+		for k, v := range headers {
+			httpHeaders.Add(k, v)
+		}
+
 		// Build config with env fallbacks
 		c, err := config.WithEnvDefaults(config.AppConfig{
 			SSEAddr:           flagSSEAddr,
@@ -48,6 +56,7 @@ var serveCmd = &cobra.Command{
 			PCEInsecureTLS:    flagInsecureTLS,
 			PCECACertPath:     flagCACertPath,
 			PCEDefaultTimeout: time.Duration(flagTimeoutSeconds) * time.Second,
+			PCECustomHeaders:  httpHeaders,
 		})
 		if err != nil {
 			return err
@@ -55,7 +64,7 @@ var serveCmd = &cobra.Command{
 		config.Set(*c)
 
 		// Construct client to validate config
-		if _, err := api.NewClient(c.PCEBaseURL, c.PCEInsecureTLS, c.PCEDefaultTimeout, c.PCECACertPath); err != nil {
+		if _, err := api.NewClient(c.PCEBaseURL, c.PCEInsecureTLS, c.PCEDefaultTimeout, c.PCECACertPath, c.PCECustomHeaders); err != nil {
 			return err
 		}
 

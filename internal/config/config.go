@@ -17,6 +17,7 @@ package config
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"strconv"
@@ -43,6 +44,7 @@ type AppConfig struct {
 	PCEInsecureTLS    bool
 	PCECACertPath     string
 	PCEDefaultTimeout time.Duration
+	PCECustomHeaders  http.Header
 }
 
 var cfg AppConfig

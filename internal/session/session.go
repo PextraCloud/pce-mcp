@@ -32,7 +32,7 @@ func getApiClient(id string) (*api.Client, error) {
 	if timeout <= 0 {
 		timeout = 10 * time.Second
 	}
-	client, err := api.NewClient(c.PCEBaseURL, c.PCEInsecureTLS, timeout, c.PCECACertPath)
+	client, err := api.NewClient(c.PCEBaseURL, c.PCEInsecureTLS, timeout, c.PCECACertPath, c.PCECustomHeaders)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create MCP client: %w", err)
 	}
