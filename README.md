@@ -23,6 +23,7 @@ Flags:
 -   `--base-url` (required): Pextra CloudEnvironment® base URL (e.g., `https://192.168.1.27:5007`).
 -   `--sse-addr` (default `:2222`): SSE server listen address; set to empty string to disable.
 -   `--http-addr` (default `:2223`): HTTP server listen address; set to empty string to disable.
+-   `--disable-stdio` (default `false`): Disable the stdio server.
 -   `--tls-ca-cert` (default `""`): Path to a custom CA certificate file for the PCE API client. If set, TLS verification will use this CA instead of the system CAs. Mutually exclusive with `--tls-skip-verify`.
 -   `--tls-skip-verify` (default `false`): Disable TLS verification for the PCE API client. This exposes you to man-in-the-middle attacks and is not recommended for production use. Mutually exclusive with `--tls-ca-cert`.
 -   `--timeout` (default `10`): PCE API request timeout in seconds.
@@ -33,6 +34,7 @@ Environment variables (fallbacks if corresponding flag is not set):
 -   `BASE_URL`
 -   `SSE_ADDR`
 -   `HTTP_ADDR`
+-   `DISABLE_STDIO` (e.g., `true`/`false`)
 -   `TLS_CA_CERT` (file path)
 -   `TLS_SKIP_VERIFY` (e.g., `true`/`false`)
 -   `TIMEOUT` (integer seconds)
@@ -45,7 +47,7 @@ Run the server:
 ./pce-mcp serve --base-url "https://localhost:5007"
 ```
 
-Disable one of the transports by passing an empty address:
+Disable transports as needed:
 
 ```bash
 # Disable SSE
@@ -53,6 +55,12 @@ Disable one of the transports by passing an empty address:
 
 # Disable HTTP
 ./pce-mcp serve --base-url "https://localhost:5007" --http-addr=
+
+# Disable stdio server
+./pce-mcp serve --base-url "https://localhost:5007" --disable-stdio
+
+# Disable two transports (only stdio server enabled)
+./pce-mcp serve --base-url "https://localhost:5007" --sse-addr= --http-addr=
 ```
 
 Use environment variables as fallbacks:
@@ -61,6 +69,7 @@ Use environment variables as fallbacks:
 export BASE_URL="https://localhost:5007"
 export SSE_ADDR=":3000"
 export HTTP_ADDR=":3001"
+export DISABLE_STDIO=true
 export TLS_SKIP_VERIFY=true
 export TIMEOUT=15
 ./pce-mcp serve
