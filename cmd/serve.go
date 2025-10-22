@@ -19,6 +19,7 @@ import (
 var (
 	flagSSEAddr        string
 	flagHTTPAddr       string
+	flagDisableStdio   bool
 	flagPCEBaseURL     string
 	flagInsecureTLS    bool
 	flagCACertPath     string
@@ -31,6 +32,7 @@ func init() {
 
 	serveCmd.Flags().StringVar(&flagSSEAddr, "sse-addr", ":2222", fmt.Sprintf("SSE server listen address, set to empty string to disable, overridable via %s env var", config.EnvSSEAddr))
 	serveCmd.Flags().StringVar(&flagHTTPAddr, "http-addr", ":2223", fmt.Sprintf("HTTP server listen address, set to empty string to disable, overridable via %s env var", config.EnvHTTPAddr))
+	serveCmd.Flags().BoolVar(&flagDisableStdio, "disable-stdio", false, fmt.Sprintf("Disable stdio server, overridable via %s env var", config.EnvDisableStdio))
 	serveCmd.Flags().StringVar(&flagPCEBaseURL, "base-url", "", fmt.Sprintf("Pextra CloudEnvironment(R) base URL (e.g., https://192.168.1.27:5007), overridable via %s env var", config.EnvBaseURL))
 	serveCmd.Flags().BoolVar(&flagInsecureTLS, "tls-skip-verify", false, fmt.Sprintf("Skip TLS certificate verification for Pextra CloudEnvironment(R) API client. This may make you vulnerable to man-in-the-middle attacks; overridable via %s env var", config.EnvTLSSkipVerify))
 	serveCmd.Flags().StringVar(&flagCACertPath, "tls-ca-cert", "", fmt.Sprintf("Path to PEM file with CA certificate(s) to trust for PCE API (use instead of --tls-skip-verify). Overridable via %s env var", config.EnvCACert))
@@ -52,6 +54,7 @@ var serveCmd = &cobra.Command{
 		c, err := config.WithEnvDefaults(config.AppConfig{
 			SSEAddr:           flagSSEAddr,
 			HTTPAddr:          flagHTTPAddr,
+			DisableStdio:      flagDisableStdio,
 			PCEBaseURL:        flagPCEBaseURL,
 			PCEInsecureTLS:    flagInsecureTLS,
 			PCECACertPath:     flagCACertPath,
@@ -72,7 +75,7 @@ var serveCmd = &cobra.Command{
 		server.AddTools(s)
 
 		// Start servers (empty address disables per-flag help)
-		errCh := make(chan error, 2)
+		errCh := make(chan error, 3)
 		started := 0
 		if c.SSEAddr != "" {
 			log.Printf("Serving SSE at %s", c.SSEAddr)
@@ -88,8 +91,16 @@ var serveCmd = &cobra.Command{
 		} else {
 			log.Printf("HTTP server disabled (empty address)")
 		}
+		if !c.DisableStdio {
+			log.Printf("Serving stdio")
+			started++
+			go func() { errCh <- server.StartStdio(s) }()
+		} else {
+			log.Printf("Stdio server disabled")
+		}
+
 		if started == 0 {
-			return fmt.Errorf("both servers disabled; provide --sse-addr and/or --http-addr or env overrides")
+			return fmt.Errorf("all servers disabled; provide --sse-addr and/or --http-addr, or enable stdio server")
 		}
 
 		// Graceful shutdown on signal

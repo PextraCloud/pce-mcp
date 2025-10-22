@@ -17,6 +17,7 @@ package server
 
 import (
 	"context"
+	"os"
 
 	"github.com/PextraCloud/pce-mcp/internal/session"
 	"github.com/mark3labs/mcp-go/server"
@@ -41,6 +42,11 @@ func GetServer() *server.MCPServer {
 	)
 
 	return s
+}
+
+func StartStdio(s *server.MCPServer) error {
+	stdioServer := server.NewStdioServer(s)
+	return stdioServer.Listen(context.Background(), os.Stdin, os.Stdout)
 }
 
 func StartSSE(s *server.MCPServer, addr string) error {

@@ -27,6 +27,7 @@ import (
 const (
 	EnvSSEAddr       = "SSE_ADDR"
 	EnvHTTPAddr      = "HTTP_ADDR"
+	EnvDisableStdio  = "DISABLE_STDIO"
 	EnvBaseURL       = "BASE_URL"
 	EnvTLSSkipVerify = "TLS_SKIP_VERIFY"
 	EnvTimeout       = "TIMEOUT"
@@ -36,8 +37,9 @@ const (
 // AppConfig holds runtime configuration for the server and API client.
 type AppConfig struct {
 	// Listen addresses
-	SSEAddr  string
-	HTTPAddr string
+	SSEAddr      string
+	HTTPAddr     string
+	DisableStdio bool
 
 	// PCE API client
 	PCEBaseURL        string
@@ -88,6 +90,14 @@ func WithEnvDefaults(c AppConfig) (*AppConfig, error) {
 			return nil, validationError{msgs: []string{fmt.Sprintf("invalid %s: %s", EnvTLSSkipVerify, v)}}
 		}
 	}
+	if v := os.Getenv(EnvDisableStdio); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			c.DisableStdio = b
+		} else {
+			return nil, validationError{msgs: []string{fmt.Sprintf("invalid %s: %s", EnvDisableStdio, v)}}
+		}
+	}
+
 	// Timeout: env override if provided (validate on parse failure)
 	if c.PCEDefaultTimeout <= 0 {
 		if v := os.Getenv(EnvTimeout); v != "" {
@@ -103,8 +113,8 @@ func WithEnvDefaults(c AppConfig) (*AppConfig, error) {
 	errs := []string{}
 
 	// Require at least one listen address
-	if c.HTTPAddr == "" && c.SSEAddr == "" {
-		errs = append(errs, fmt.Sprintf("at least one of %s or %s must be set", EnvHTTPAddr, EnvSSEAddr))
+	if c.HTTPAddr == "" && c.SSEAddr == "" && c.DisableStdio {
+		errs = append(errs, fmt.Sprintf("at least one of %s, %s, or stdio server must be enabled", EnvSSEAddr, EnvHTTPAddr))
 	}
 
 	// PCE base URL required and must look like http:// or https://
