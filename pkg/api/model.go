@@ -49,8 +49,8 @@ type DatacenterList struct {
 	OrganizationId string `json:"organization_id"`
 	Name           string `json:"name"`
 	Location       struct {
-		Latitude  string `json:"latitude"`
-		Longitude string `json:"longitude"`
+		Latitude  float64 `json:"latitude"`
+		Longitude float64 `json:"longitude"`
 	} `json:"location"`
 	Creation    string `json:"creation"`
 	Description string `json:"description"`
