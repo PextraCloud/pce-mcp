@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/PextraCloud/pce-mcp/internal/session"
 	"github.com/PextraCloud/pce-mcp/pkg/api"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -47,7 +46,7 @@ func handleGetNodeById(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallT
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
@@ -73,7 +72,7 @@ func GetCurrentNode() (mcp.Tool, server.ToolHandlerFunc) {
 }
 
 func handleGetCurrentNode(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		fmt.Println("Error retrieving session:", err)
 		return mcp.NewToolResultError(err.Error()), nil
@@ -120,7 +119,7 @@ func handleGetNodeHardwareById(ctx context.Context, req mcp.CallToolRequest) (*m
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
@@ -163,7 +162,7 @@ func handleGetNodeLicenseById(ctx context.Context, req mcp.CallToolRequest) (*mc
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
@@ -206,7 +205,7 @@ func handleGetNodeStoragePoolsById(ctx context.Context, req mcp.CallToolRequest)
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
@@ -247,7 +246,7 @@ func handleGetNodePciDevicesById(ctx context.Context, req mcp.CallToolRequest) (
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}

@@ -18,7 +18,6 @@ package pce
 import (
 	"context"
 
-	"github.com/PextraCloud/pce-mcp/internal/session"
 	"github.com/PextraCloud/pce-mcp/pkg/api"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -44,7 +43,7 @@ func handleGetClusterHardwareById(ctx context.Context, req mcp.CallToolRequest) 
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
@@ -79,7 +78,7 @@ func handleGetClusterLicensingById(ctx context.Context, req mcp.CallToolRequest)
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}

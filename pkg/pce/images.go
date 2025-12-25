@@ -18,7 +18,6 @@ package pce
 import (
 	"context"
 
-	"github.com/PextraCloud/pce-mcp/internal/session"
 	"github.com/PextraCloud/pce-mcp/pkg/api"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -49,7 +48,7 @@ func handleGetImages(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToo
 	}
 
 	var client *api.Client
-	if client, err = session.GetSession("sessionId"); err != nil {
+	if client, err = clientForRequest(ctx, req); err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 

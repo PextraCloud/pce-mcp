@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/PextraCloud/pce-mcp/internal/session"
 	"github.com/PextraCloud/pce-mcp/pkg/api"
 	"github.com/PextraCloud/pce-mcp/pkg/api/enum"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -53,7 +52,7 @@ func handleGetInstancesInCluster(ctx context.Context, req mcp.CallToolRequest) (
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
@@ -90,7 +89,7 @@ func handleGetInstancesInNode(ctx context.Context, req mcp.CallToolRequest) (*mc
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
@@ -151,7 +150,7 @@ func handlePowerInstance(ctx context.Context, req mcp.CallToolRequest) (*mcp.Cal
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}

@@ -16,9 +16,13 @@ limitations under the License.
 package pce
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/PextraCloud/pce-mcp/internal/session"
+	"github.com/PextraCloud/pce-mcp/pkg/api"
 	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mark3labs/mcp-go/server"
 )
 
 const hierarchyHelpText = `\n\nHierarchy: [Organization -> Datacenters -> Clusters -> Nodes -> Instances]`
@@ -84,4 +88,16 @@ func optionalParam[T any](r mcp.CallToolRequest, p string) (T, error) {
 	}
 
 	return r.GetArguments()[p].(T), nil
+}
+
+func clientForRequest(ctx context.Context, req mcp.CallToolRequest) (*api.Client, error) {
+	s := server.ClientSessionFromContext(ctx)
+	if s == nil {
+		return nil, fmt.Errorf("missing session context")
+	}
+	var authorization string
+	if req.Header != nil {
+		authorization = req.Header.Get("Authorization")
+	}
+	return session.GetSession(s.SessionID(), authorization)
 }

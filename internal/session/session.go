@@ -17,16 +17,25 @@ package session
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/PextraCloud/pce-mcp/internal/config"
 	"github.com/PextraCloud/pce-mcp/pkg/api"
 )
 
-// <session id> -> *api.Client
-var sessionStore = make(map[string]*api.Client)
+type sessionEntry struct {
+	client *api.Client
+	mu     sync.Mutex
+}
 
-func getApiClient(id string) (*api.Client, error) {
+// <session id> -> *api.Client
+var (
+	sessionStore = make(map[string]*sessionEntry)
+	sessionMu    sync.RWMutex
+)
+
+func getApiClient() (*api.Client, error) {
 	c := config.Get()
 	timeout := c.PCEDefaultTimeout
 	if timeout <= 0 {
@@ -41,26 +50,65 @@ func getApiClient(id string) (*api.Client, error) {
 }
 
 func RegisterSession(id string) error {
-	client, err := getApiClient(id)
+	if id == "" {
+		return fmt.Errorf("session id is required")
+	}
+	entry, err := newSessionEntry()
 	if err != nil {
 		return err
 	}
-	sessionStore[id] = client
+	sessionMu.Lock()
+	sessionStore[id] = entry
+	sessionMu.Unlock()
 	return nil
 }
 
 func UnregisterSession(id string) {
+	sessionMu.Lock()
 	delete(sessionStore, id)
+	sessionMu.Unlock()
 }
 
-func GetSession(id string) (*api.Client, error) {
-	return getApiClient(id)
-	// TODO implement session management
-	// client, exists := sessionStore["id"]
-	//
-	//	if !exists {
-	//		return nil, fmt.Errorf("session not found")
-	//	}
-	//
-	// return client, nil
+func GetSession(id string, authorization string) (*api.Client, error) {
+	if id == "" {
+		return nil, fmt.Errorf("session id is required")
+	}
+
+	sessionMu.RLock()
+	entry, ok := sessionStore[id]
+	sessionMu.RUnlock()
+	if !ok {
+		var err error
+		entry, err = newSessionEntry()
+		if err != nil {
+			return nil, err
+		}
+		sessionMu.Lock()
+		sessionStore[id] = entry
+		sessionMu.Unlock()
+	}
+
+	entry.mu.Lock()
+	defer entry.mu.Unlock()
+	setAuthorization(entry.client, authorization)
+	return entry.client, nil
+}
+
+func newSessionEntry() (*sessionEntry, error) {
+	client, err := getApiClient()
+	if err != nil {
+		return nil, err
+	}
+	return &sessionEntry{client: client}, nil
+}
+
+func setAuthorization(client *api.Client, authorization string) {
+	if client == nil {
+		return
+	}
+	if authorization == "" {
+		client.Headers.Del("Authorization")
+		return
+	}
+	client.Headers.Set("Authorization", authorization)
 }

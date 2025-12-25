@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/PextraCloud/pce-mcp/internal/session"
 	"github.com/PextraCloud/pce-mcp/pkg/api"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -39,7 +38,7 @@ func ListOrganizations() (mcp.Tool, server.ToolHandlerFunc) {
 }
 
 func handleListOrganizations(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
@@ -73,7 +72,7 @@ func handleGetOrganizationById(ctx context.Context, req mcp.CallToolRequest) (*m
 	}
 
 	var client *api.Client
-	if client, err = session.GetSession("sessionId"); err != nil {
+	if client, err = clientForRequest(ctx, req); err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
@@ -98,7 +97,7 @@ func GetCurrentOrganization() (mcp.Tool, server.ToolHandlerFunc) {
 }
 
 func handleGetCurrentOrganization(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		fmt.Println("Error retrieving session:", err)
 		return mcp.NewToolResultError(err.Error()), nil
@@ -206,7 +205,7 @@ func handleCreateOrganization(ctx context.Context, req mcp.CallToolRequest) (*mc
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
@@ -253,7 +252,7 @@ func handleDeleteOrganizationById(ctx context.Context, req mcp.CallToolRequest) 
 		return mcp.NewToolResultError("Deletion not confirmed. Set 'are_you_sure' to true to proceed."), nil
 	}
 
-	client, err := session.GetSession("sessionId")
+	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}

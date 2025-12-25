@@ -17,6 +17,7 @@ package server
 
 import (
 	"context"
+	"log"
 	"os"
 
 	"github.com/PextraCloud/pce-mcp/internal/session"
@@ -27,10 +28,13 @@ func GetServer() *server.MCPServer {
 	hooks := &server.Hooks{}
 	// Session hooks
 	hooks.AddOnRegisterSession(func(ctx context.Context, s server.ClientSession) {
-		session.RegisterSession("sessionId")
+		sessionID := s.SessionID()
+		if err := session.RegisterSession(sessionID); err != nil {
+			log.Printf("failed to register session %s: %v", sessionID, err)
+		}
 	})
 	hooks.AddOnUnregisterSession(func(ctx context.Context, s server.ClientSession) {
-		session.UnregisterSession("sessionId")
+		session.UnregisterSession(s.SessionID())
 	})
 
 	s := server.NewMCPServer("Pextra CloudEnvironment(R) MCP Server", "1.0.0",
