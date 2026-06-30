@@ -34,6 +34,7 @@ func addUserTools(s *server.MCPServer) {
 	s.AddTool(pce.ListUsersInOrganizationById())
 	s.AddTool(pce.InvalidateUserSessionsById())
 	s.AddTool(pce.DeleteUserById())
+	s.AddTool(pce.GetUserSession())
 }
 
 func addClusterTools(s *server.MCPServer) {
@@ -63,4 +64,5 @@ func AddTools(s *server.MCPServer) {
 	addClusterTools(s)
 	addNodeTools(s)
 	addInstanceTools(s)
+	s.AddTool(pce.GetPCEHealthcheck())
 }

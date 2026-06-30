@@ -134,3 +134,34 @@ func handleInvalidateUserSessionsById(ctx context.Context, req mcp.CallToolReque
 
 	return mcp.NewToolResultText("User sessions invalidated successfully"), nil
 }
+
+// User Session Code
+func GetUserSession() (mcp.Tool, server.ToolHandlerFunc) {
+	return mcp.NewTool("get_user_session",
+		mcp.WithDescription("Gives the current User Session information"),
+		mcp.WithToolAnnotation(mcp.ToolAnnotation{
+			Title: "Get User Session",
+		}),
+	), handleGetUserSession
+}
+
+type getUserSessionResult struct {
+	Session *api.GetUserSessionResponse `json:"session"`
+}
+
+func handleGetUserSession(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+
+	client, err := clientForRequest(ctx, req)
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, deleteErr := api.GetUserSession(ctx, client, &api.GetUserSessionArg{})
+	if deleteErr != nil {
+		return mcp.NewToolResultError(deleteErr.Error()), nil
+	}
+
+	return mcp.NewToolResultJSON(&getUserSessionResult{
+		Session: result,
+	})
+}
