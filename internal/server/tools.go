@@ -24,6 +24,7 @@ func addOrganizationTools(s *server.MCPServer) {
 	s.AddTool(pce.ListOrganizations())
 	s.AddTool(pce.GetOrganizationById())
 	s.AddTool(pce.GetCurrentOrganization())
+	s.AddTool(pce.ListAIProvidersForOrganization())
 	// s.AddTool(pce.ListOrganizationAuditLogsById())
 	// s.AddTool(pce.ListOrganizationUserLockoutsById())
 	s.AddTool(pce.CreateOrganization())

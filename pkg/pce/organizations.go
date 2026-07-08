@@ -266,3 +266,45 @@ func handleDeleteOrganizationById(ctx context.Context, req mcp.CallToolRequest) 
 
 	return mcp.NewToolResultText(fmt.Sprintf("Organization %s deleted successfully.", orgId)), nil
 }
+
+/* lists ai providers */
+func ListAIProvidersForOrganization() (mcp.Tool, server.ToolHandlerFunc) {
+	return mcp.NewTool("list_ai_providers_for_organization",
+		mcp.WithDescription("Retrieve the AI providers configured for a specific organization"),
+		mcp.WithToolAnnotation(mcp.ToolAnnotation{
+			Title:        "List AI Providers For Organization",
+			ReadOnlyHint: mcp.ToBoolPtr(true),
+		}),
+		mcp.WithString("organization_id",
+			mcp.Required(),
+			mcp.Description("Unique organization id"),
+		),
+	), handleListAIProvidersForOrganization
+}
+
+type listAIProvidersForOrganizationResult struct {
+	AIProviders *api.ListAIProvidersForOrganizationResponse `json:"ai_providers"`
+}
+
+func handleListAIProvidersForOrganization(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	organizationId, err := requiredParam[string](req, "organization_id")
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	client, err := clientForRequest(ctx, req)
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	result, getErr := api.ListAIProvidersForOrganization(ctx, client, &api.ListAIProvidersForOrganizationArg{
+		OrganizationId: organizationId,
+	})
+	if getErr != nil {
+		return mcp.NewToolResultError(getErr.Error()), nil
+	}
+
+	return mcp.NewToolResultJSON(&listAIProvidersForOrganizationResult{
+		AIProviders: result,
+	})
+}
