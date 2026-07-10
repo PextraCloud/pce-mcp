@@ -44,17 +44,21 @@ type UserList struct {
 	Creation       string `json:"creation"`
 }
 
-type DatacenterList struct {
-	Id             string `json:"id"`
-	OrganizationId string `json:"organization_id"`
-	Name           string `json:"name"`
-	Location       struct {
-		Latitude  float64 `json:"latitude"`
-		Longitude float64 `json:"longitude"`
-	} `json:"location"`
-	Creation    string `json:"creation"`
-	Description string `json:"description"`
+type DatacenterLocation struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
+
+type DatacenterList struct {
+	Id             string              `json:"id"`
+	OrganizationId string              `json:"organization_id"`
+	Name           string              `json:"name"`
+	Location       *DatacenterLocation `json:"location"`
+	Creation       string              `json:"creation"`
+	Description    string              `json:"description"`
+}
+
+type DatacenterFull = DatacenterList
 
 type ClusterList struct {
 	Id             string `json:"id"`
