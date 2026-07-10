@@ -27,7 +27,7 @@ func addOrganizationTools(s *server.MCPServer) {
 	// s.AddTool(pce.ListOrganizationAuditLogsById())
 	// s.AddTool(pce.ListOrganizationUserLockoutsById())
 	s.AddTool(pce.CreateOrganization())
-	s.AddTool(pce.DeleteOrganizationById())
+	s.AddTool(pce.DestroyOrganization())
 }
 
 func addUserTools(s *server.MCPServer) {

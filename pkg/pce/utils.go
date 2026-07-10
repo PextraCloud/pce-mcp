@@ -101,3 +101,16 @@ func clientForRequest(ctx context.Context, req mcp.CallToolRequest) (*api.Client
 	}
 	return session.GetSession(s.SessionID(), authorization)
 }
+
+var mcpToolOptionDestroyConfirmation = mcp.WithBoolean("are_you_sure",
+	mcp.Required(),
+	mcp.Description("Must be set to true to confirm the destruction; this action is irreversible"),
+)
+
+func confirmDestructiveAction(req mcp.CallToolRequest) bool {
+	areYouSure, err := requiredParam[bool](req, "are_you_sure")
+	if err != nil {
+		return false
+	}
+	return areYouSure
+}

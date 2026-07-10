@@ -221,35 +221,28 @@ func handleCreateOrganization(ctx context.Context, req mcp.CallToolRequest) (*mc
 	return mcp.NewToolResultJSON(org)
 }
 
-func DeleteOrganizationById() (mcp.Tool, server.ToolHandlerFunc) {
-	return mcp.NewTool("delete_organization_by_id",
-		mcp.WithDescription("Delete an existing organization. The organization must be empty of any datacenters (and consequently clusters and nodes) before it can be deleted."),
+func DestroyOrganization() (mcp.Tool, server.ToolHandlerFunc) {
+	return mcp.NewTool("destroy_organization",
+		mcp.WithDescription("Destroy an organization, this will fail if there are any datacenters in the organization; must be run by the root user"),
 		mcp.WithToolAnnotation(mcp.ToolAnnotation{
-			Title:           "Delete Organization By ID",
+			Title:           "Destroy organization",
 			DestructiveHint: mcp.ToBoolPtr(true),
 		}),
 		mcp.WithString("organization_id",
 			mcp.Required(),
 			mcp.Description("Unique organization id (format: org-<xxx>)"),
 		),
-		mcp.WithBoolean("are_you_sure",
-			mcp.Required(),
-			mcp.Description("A safety check to prevent accidental deletions. Must be set to true to proceed with deletion."),
-		),
-	), handleDeleteOrganizationById
+		mcpToolOptionDestroyConfirmation,
+	), handleDestroyOrganization
 }
 
-func handleDeleteOrganizationById(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func handleDestroyOrganization(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	orgId, err := requiredParam[string](req, "organization_id")
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
-	areYouSure, err := requiredParam[bool](req, "are_you_sure")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-	if !areYouSure {
-		return mcp.NewToolResultError("Deletion not confirmed. Set 'are_you_sure' to true to proceed."), nil
+	if !confirmDestructiveAction(req) {
+		return mcp.NewToolResultError("destructive action not confirmed"), nil
 	}
 
 	client, err := clientForRequest(ctx, req)
@@ -264,5 +257,5 @@ func handleDeleteOrganizationById(ctx context.Context, req mcp.CallToolRequest) 
 		return mcp.NewToolResultError(deleteErr.Error()), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Organization %s deleted successfully.", orgId)), nil
+	return mcp.NewToolResultText(fmt.Sprintf("Organization %s destroyed successfully", orgId)), nil
 }
