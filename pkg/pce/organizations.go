@@ -176,21 +176,22 @@ func ListOrganizationUserLockoutsById() (mcp.Tool, server.ToolHandlerFunc) {
 
 func CreateOrganization() (mcp.Tool, server.ToolHandlerFunc) {
 	return mcp.NewTool("create_organization",
-		mcp.WithDescription("Create a new organization within the Pextra CloudEnvironment (PCE). Organizations are top-level entities that represent distinct tenants within the cloud."),
+		mcp.WithDescription("Create a new organization; must be run by the root user"),
 		mcp.WithToolAnnotation(mcp.ToolAnnotation{
-			Title: "Create Organization",
+			Title: "Create organization",
 		}),
 		mcp.WithString("name",
 			mcp.Required(),
 			mcp.MinLength(nameDefaultMinLength),
 			mcp.MaxLength(nameDefaultMaxLength),
-			mcp.Pattern(nameRegex(nameDefaultMinLength, nameDefaultMaxLength)), // redundant, but being explicit
-			mcp.Description("The name of the new organization."),
+			mcp.Pattern(nameRegex(nameDefaultMinLength, nameDefaultMaxLength)),
+			mcp.Description("Organization name to create"),
 		),
 		mcp.WithString("description",
 			mcp.MaxLength(descriptionDefaultMaxLength),
-			mcp.Description("A brief description of the organization."),
+			mcp.Description("Description for the new organization"),
 		),
+		mcp.WithOutputSchema[api.CreateOrganizationResponse](),
 	), handleCreateOrganization
 }
 
