@@ -57,7 +57,12 @@ func addInstanceTools(s *server.MCPServer) {
 	s.AddTool(pce.PowerInstance())
 }
 
+func addContextTools(s *server.MCPServer) {
+	s.AddTool(pce.GetMe())
+}
+
 func AddTools(s *server.MCPServer) {
+	addContextTools(s)
 	addOrganizationTools(s)
 	addUserTools(s)
 	addClusterTools(s)
