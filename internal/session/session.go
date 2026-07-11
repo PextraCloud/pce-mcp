@@ -18,7 +18,6 @@ package session
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/PextraCloud/pce-mcp/internal/config"
 	"github.com/PextraCloud/pce-mcp/pkg/api"
@@ -34,20 +33,6 @@ var (
 	sessionStore = make(map[string]*sessionEntry)
 	sessionMu    sync.RWMutex
 )
-
-func getApiClient() (*api.Client, error) {
-	c := config.Get()
-	timeout := c.PCEDefaultTimeout
-	if timeout <= 0 {
-		timeout = 10 * time.Second
-	}
-	client, err := api.NewClient(c.PCEBaseURL, c.PCEInsecureTLS, timeout, c.PCECACertPath, c.PCECustomHeaders)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create MCP client: %w", err)
-	}
-
-	return client, nil
-}
 
 func RegisterSession(id string) error {
 	if id == "" {
@@ -69,7 +54,7 @@ func UnregisterSession(id string) {
 	sessionMu.Unlock()
 }
 
-func GetSession(id string, authorization string) (*api.Client, error) {
+func GetSession(id string) (*api.Client, error) {
 	if id == "" {
 		return nil, fmt.Errorf("session id is required")
 	}
@@ -90,25 +75,13 @@ func GetSession(id string, authorization string) (*api.Client, error) {
 
 	entry.mu.Lock()
 	defer entry.mu.Unlock()
-	setAuthorization(entry.client, authorization)
 	return entry.client, nil
 }
 
 func newSessionEntry() (*sessionEntry, error) {
-	client, err := getApiClient()
+	client, err := config.NewDefaultApiClient()
 	if err != nil {
 		return nil, err
 	}
 	return &sessionEntry{client: client}, nil
-}
-
-func setAuthorization(client *api.Client, authorization string) {
-	if client == nil {
-		return
-	}
-	if authorization == "" {
-		client.Headers.Del("Authorization")
-		return
-	}
-	client.Headers.Set("Authorization", authorization)
 }

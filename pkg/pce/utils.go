@@ -99,7 +99,19 @@ func clientForRequest(ctx context.Context, req mcp.CallToolRequest) (*api.Client
 	if req.Header != nil {
 		authorization = req.Header.Get("Authorization")
 	}
-	return session.GetSession(s.SessionID(), authorization)
+	client, err := session.GetSession(s.SessionID())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get session: %w", err)
+	}
+
+	// Update authorization header based on request `Authorization` header
+	if authorization == "" {
+		client.Headers.Del("Authorization")
+	} else {
+		client.Headers.Set("Authorization", authorization)
+	}
+
+	return client, nil
 }
 
 var mcpToolOptionDestroyConfirmation = mcp.WithBoolean("are_you_sure",
