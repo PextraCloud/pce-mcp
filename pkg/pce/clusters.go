@@ -23,29 +23,76 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-func GetClusterHardwareById() (mcp.Tool, server.ToolHandlerFunc) {
-	return mcp.NewTool("get_cluster_hardware_by_id",
-		mcp.WithDescription("Retrieve aggregated hardware information about all nodes in a specific cluster"),
+func GetCluster() (mcp.Tool, server.ToolHandlerFunc) {
+	return mcp.NewTool("get_cluster",
+		mcp.WithDescription("Get detailed information about a specific cluster, including its nodes and their details"),
 		mcp.WithToolAnnotation(mcp.ToolAnnotation{
-			Title:        "Get Cluster Hardware By ID",
+			Title:        "Get cluster",
 			ReadOnlyHint: mcp.ToBoolPtr(true),
 		}),
 		mcp.WithString("cluster_id",
-			mcp.Required(),
-			mcp.Description("Unique cluster id (format: cls-<xxx>)"),
+			mcp.Description("If specified, the cluster to get information for (format: cls-<xxx>), otherwise the current cluster is used"),
 		),
-	), handleGetClusterHardwareById
+		mcp.WithOutputSchema[api.GetClusterByIdResponse](),
+	), handleGetCluster
 }
 
-func handleGetClusterHardwareById(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	clusterId, err := requiredParam[string](req, "cluster_id")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
+func handleGetCluster(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	clusterId, _ := optionalParam[string](req, "cluster_id")
 
 	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	// If no cluster ID is provided, use the current cluster ID
+	if clusterId == "" {
+		currentIds, err := getCurrentTreeIds(ctx, client)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		clusterId = currentIds.ClusterId
+	}
+
+	cluster, getErr := api.GetClusterById(ctx, client, &api.GetClusterByIdArg{
+		ClusterId: clusterId,
+	})
+	if getErr != nil {
+		return mcp.NewToolResultError(getErr.Error()), nil
+	}
+
+	return mcp.NewToolResultJSON(cluster)
+}
+
+func GetClusterHardware() (mcp.Tool, server.ToolHandlerFunc) {
+	return mcp.NewTool("get_cluster_hardware",
+		mcp.WithDescription("Get aggregated compute, memory, and storage capacity information for all nodes in a specific cluster"),
+		mcp.WithToolAnnotation(mcp.ToolAnnotation{
+			Title:        "Get cluster hardware",
+			ReadOnlyHint: mcp.ToBoolPtr(true),
+		}),
+		mcp.WithString("cluster_id",
+			mcp.Description("If specified, the cluster to get hardware information for (format: cls-<xxx>), otherwise the current cluster is used"),
+		),
+		mcp.WithOutputSchema[api.GetClusterHardwareByIdResponse](),
+	), handleGetClusterHardware
+}
+
+func handleGetClusterHardware(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	clusterId, _ := optionalParam[string](req, "cluster_id")
+
+	client, err := clientForRequest(ctx, req)
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	// If no cluster ID is provided, use the current cluster ID
+	if clusterId == "" {
+		currentIds, err := getCurrentTreeIds(ctx, client)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		clusterId = currentIds.ClusterId
 	}
 
 	hardware, getErr := api.GetClusterHardwareById(ctx, client, &api.GetClusterHardwareByIdArg{

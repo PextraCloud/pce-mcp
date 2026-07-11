@@ -74,6 +74,11 @@ type ClusterList struct {
 	HasLeader      bool   `json:"has_leader"`
 }
 
+type ClusterFull struct {
+	ClusterList
+	HealthStatus enum.ClusterHealthStatus `json:"health_status"`
+}
+
 type InstanceList struct {
 	Id     string `json:"id"`
 	NodeId string `json:"node_id"`

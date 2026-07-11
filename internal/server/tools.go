@@ -45,7 +45,8 @@ func addUserTools(s *server.MCPServer) {
 }
 
 func addClusterTools(s *server.MCPServer) {
-	s.AddTool(pce.GetClusterHardwareById())
+	s.AddTool(pce.GetClusterHardware())
+	s.AddTool(pce.GetCluster())
 	s.AddTool(pce.GetClusterLicensingById())
 }
 

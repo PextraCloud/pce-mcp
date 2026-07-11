@@ -17,6 +17,28 @@ package api
 
 import "context"
 
+type GetClusterByIdArg struct {
+	ClusterId string
+}
+type GetClusterByIdResponse struct {
+	Cluster ClusterFull `json:"cluster"`
+	Nodes   []NodeList  `json:"nodes"`
+}
+
+func GetClusterById(ctx context.Context, c *Client, arg *GetClusterByIdArg) (*GetClusterByIdResponse, *APIError) {
+	if arg == nil || arg.ClusterId == "" {
+		return nil, NewAPIError(400, "cluster_id is required")
+	}
+
+	path := c.ExpandPath("/v1/clusters/{cluster_id}", map[string]string{"cluster_id": arg.ClusterId})
+
+	var resp GetClusterByIdResponse
+	if apiErr := c.Get(ctx, path, nil, &resp); apiErr != nil {
+		return nil, apiErr
+	}
+	return &resp, nil
+}
+
 type GetClusterHardwareByIdArg struct {
 	ClusterId string
 }
