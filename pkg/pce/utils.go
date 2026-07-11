@@ -127,11 +127,34 @@ func confirmDestructiveAction(req mcp.CallToolRequest) bool {
 	return areYouSure
 }
 
-func currentOrgId(ctx context.Context, client *api.Client) (string, error) {
-	// TODO: caching
-	me, err := api.GetUserSession(ctx, client)
+func getCurrentNodeId(ctx context.Context, client *api.Client) (string, error) {
+	health, err := api.RunHealthcheck(ctx, client, &api.RunHealthcheckArg{})
 	if err != nil {
 		return "", err
 	}
-	return me.User.OrganizationId, nil
+	return health.Id, nil
+}
+
+type currentTreeIdsResult struct {
+	NodeId         string
+	ClusterId      string
+	OrganizationId string
+}
+
+func getCurrentTreeIds(ctx context.Context, client *api.Client) (*currentTreeIdsResult, error) {
+	// TODO: caching
+	nodeId, err := getCurrentNodeId(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+
+	node, err := api.GetNodeById(ctx, client, &api.GetNodeByIdArg{NodeId: nodeId})
+	if err != nil {
+		return nil, err
+	}
+	return &currentTreeIdsResult{
+		NodeId:         nodeId,
+		ClusterId:      node.Node.ClusterId,
+		OrganizationId: node.Node.OrganizationId,
+	}, nil
 }

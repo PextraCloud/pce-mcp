@@ -51,10 +51,11 @@ func handleListDatacenters(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 
 	// If no organization ID is provided, use the current user's organization ID
 	if organizationId == "" {
-		organizationId, err = currentOrgId(ctx, client)
+		currentIds, err := getCurrentTreeIds(ctx, client)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
+		organizationId = currentIds.OrganizationId
 	}
 
 	datacenters, getErr := api.ListDatacenters(ctx, client, &api.ListDatacentersArg{
