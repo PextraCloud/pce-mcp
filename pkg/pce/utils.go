@@ -126,3 +126,12 @@ func confirmDestructiveAction(req mcp.CallToolRequest) bool {
 	}
 	return areYouSure
 }
+
+func currentOrgId(ctx context.Context, client *api.Client) (string, error) {
+	// TODO: caching
+	me, err := api.GetUserSession(ctx, client)
+	if err != nil {
+		return "", err
+	}
+	return me.User.OrganizationId, nil
+}

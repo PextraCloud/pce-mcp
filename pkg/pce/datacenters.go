@@ -51,12 +51,10 @@ func handleListDatacenters(ctx context.Context, req mcp.CallToolRequest) (*mcp.C
 
 	// If no organization ID is provided, use the current user's organization ID
 	if organizationId == "" {
-		// TODO: caching
-		me, getErr := api.GetUserSession(ctx, client)
-		if getErr != nil {
-			return mcp.NewToolResultError(getErr.Error()), nil
+		organizationId, err = currentOrgId(ctx, client)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
 		}
-		organizationId = me.User.OrganizationId
 	}
 
 	datacenters, getErr := api.ListDatacenters(ctx, client, &api.ListDatacentersArg{
