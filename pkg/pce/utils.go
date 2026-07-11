@@ -148,9 +148,9 @@ func getCurrentTreeIds(ctx context.Context, client *api.Client) (*currentTreeIds
 		return nil, err
 	}
 
-	node, err := api.GetNodeById(ctx, client, &api.GetNodeByIdArg{NodeId: nodeId})
-	if err != nil {
-		return nil, err
+	node, getErr := api.GetNodeById(ctx, client, &api.GetNodeByIdArg{NodeId: nodeId})
+	if getErr != nil {
+		return nil, getErr
 	}
 	return &currentTreeIdsResult{
 		NodeId:         nodeId,
