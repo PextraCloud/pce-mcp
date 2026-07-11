@@ -17,7 +17,6 @@ package pce
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/PextraCloud/pce-mcp/pkg/api"
 	"github.com/PextraCloud/pce-mcp/pkg/api/enum"
@@ -25,85 +24,8 @@ import (
 	"github.com/mark3labs/mcp-go/server"
 )
 
-const instancesHelpText = `\n\nInstances are virtual machines (QEMU/KVM) or containers (LXC) that run on nodes within clusters.
-They utilize the compute resources of the nodes to perform various tasks and services.` + hierarchyHelpText
-
 type getInstancesInNodeOrClusterResult struct {
 	Instances *api.GetInstancesByIdResponse `json:"instances"`
-}
-
-func GetInstancesInCluster() (mcp.Tool, server.ToolHandlerFunc) {
-	return mcp.NewTool("get_instances_in_cluster",
-		mcp.WithDescription(fmt.Sprintf("Retrieve instances deployed on all nodes within a specific cluster%s", instancesHelpText)),
-		mcp.WithToolAnnotation(mcp.ToolAnnotation{
-			Title:        "Get Instances in Cluster",
-			ReadOnlyHint: mcp.ToBoolPtr(true),
-		}),
-		mcp.WithString("cluster_id",
-			mcp.Required(),
-			mcp.Description("Unique cluster id (format: cls-<xxx>)"),
-		),
-	), handleGetInstancesInCluster
-}
-
-func handleGetInstancesInCluster(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	clusterId, err := requiredParam[string](req, "cluster_id")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	client, err := clientForRequest(ctx, req)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	instances, getErr := api.GetInstancesById(ctx, client, &api.GetInstancesByIdArg{
-		ClusterId: clusterId,
-	})
-	if getErr != nil {
-		return mcp.NewToolResultError(getErr.Error()), nil
-	}
-
-	return mcp.NewToolResultJSON(&getInstancesInNodeOrClusterResult{
-		Instances: instances,
-	})
-}
-
-func GetInstancesInNode() (mcp.Tool, server.ToolHandlerFunc) {
-	return mcp.NewTool("get_instances_in_node",
-		mcp.WithDescription(fmt.Sprintf("Retrieve instances deployed on a specific node%s", instancesHelpText)),
-		mcp.WithToolAnnotation(mcp.ToolAnnotation{
-			Title:        "Get Instances in Node",
-			ReadOnlyHint: mcp.ToBoolPtr(true),
-		}),
-		mcp.WithString("node_id",
-			mcp.Required(),
-			mcp.Description("Unique node id (format: node-<xxx>)"),
-		),
-	), handleGetInstancesInNode
-}
-
-func handleGetInstancesInNode(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	nodeId, err := requiredParam[string](req, "node_id")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	client, err := clientForRequest(ctx, req)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	instances, getErr := api.GetInstancesById(ctx, client, &api.GetInstancesByIdArg{
-		NodeId: nodeId,
-	})
-	if getErr != nil {
-		return mcp.NewToolResultError(getErr.Error()), nil
-	}
-
-	return mcp.NewToolResultJSON(&getInstancesInNodeOrClusterResult{
-		Instances: instances,
-	})
 }
 
 func PowerInstance() (mcp.Tool, server.ToolHandlerFunc) {
@@ -175,7 +97,7 @@ func handlePowerInstance(ctx context.Context, req mcp.CallToolRequest) (*mcp.Cal
 
 func SearchInstances() (mcp.Tool, server.ToolHandlerFunc) {
 	return mcp.NewTool("search_instances_in_cluster",
-		mcp.WithDescription("Search for instances in a specific cluster based on name, instance type, vcpus, and memory; returns all instances in the cluster if no filters are specified"),
+		mcp.WithDescription("List instances in a specific cluster with optional filtering based on name, vcpus, memory, autostart status, and node id; also use when you want to find instances in a cluster or node"),
 		mcp.WithToolAnnotation(mcp.ToolAnnotation{
 			Title:        "Search instances in cluster",
 			ReadOnlyHint: mcp.ToBoolPtr(true),
@@ -184,7 +106,7 @@ func SearchInstances() (mcp.Tool, server.ToolHandlerFunc) {
 			mcp.Description("Cluster to search for instances in (format: cls-<xxx>); if not specified, the current cluster is used"),
 		),
 		mcp.WithString("node_id",
-			mcp.Description("Node to search for instances in (format: node-<xxx>); if not specified, all nodes in the specified cluster are searched"),
+			mcp.Description("Node to search for instances in (format: node-<xxx>); if not specified, all nodes in the specified cluster are searched, takes precedence over cluster_id"),
 		),
 		mcpToolOptionStringFilter("name", "instance names"),
 		mcpToolOptionNumberFilter("vcpus", "number of vCPUs"),
