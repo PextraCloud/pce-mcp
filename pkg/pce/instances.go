@@ -172,3 +172,92 @@ func handlePowerInstance(ctx context.Context, req mcp.CallToolRequest) (*mcp.Cal
 		TaskId:  res.TaskId,
 	})
 }
+
+func SearchInstances() (mcp.Tool, server.ToolHandlerFunc) {
+	return mcp.NewTool("search_instances_in_cluster",
+		mcp.WithDescription("Search for instances in a specific cluster based on name, instance type, vcpus, and memory; returns all instances in the cluster if no filters are specified"),
+		mcp.WithToolAnnotation(mcp.ToolAnnotation{
+			Title:        "Search instances in cluster",
+			ReadOnlyHint: mcp.ToBoolPtr(true),
+		}),
+		mcp.WithString("cluster_id",
+			mcp.Description("Cluster to search for instances in (format: cls-<xxx>); if not specified, the current cluster is used"),
+		),
+		mcp.WithString("node_id",
+			mcp.Description("Node to search for instances in (format: node-<xxx>); if not specified, all nodes in the specified cluster are searched"),
+		),
+		mcpToolOptionStringFilter("name", "instance names"),
+		mcpToolOptionNumberFilter("vcpus", "number of vCPUs"),
+		mcpToolOptionNumberFilter("memory", "memory size in MB"),
+		mcpToolOptionBoolFilter("autostart", "whether the instance is set to autostart on boot"),
+		mcp.WithOutputSchema[getInstancesInNodeOrClusterResult](),
+	), handleSearchInstances
+}
+
+func handleSearchInstances(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	clusterId, _ := optionalParam[string](req, "cluster_id")
+	nodeId, _ := optionalParam[string](req, "node_id")
+	nameFilter, _ := optionalParam[string](req, "name")
+	vcpusFilterAny, _ := optionalParam[map[string]any](req, "vcpus")
+	memoryFilterAny, _ := optionalParam[map[string]any](req, "memory")
+	autostartFilter, _ := optionalParamPtr[bool](req, "autostart")
+
+	vcpusFilter := convertFilterToInt(vcpusFilterAny)
+	memoryFilter := convertFilterToInt(memoryFilterAny)
+
+	client, err := clientForRequest(ctx, req)
+	if err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	// If no cluster ID is provided, use the current cluster ID
+	if clusterId == "" {
+		currentIds, err := getCurrentTreeIds(ctx, client)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		clusterId = currentIds.ClusterId
+	}
+
+	// If both specified, nodeId takes precedence over clusterId
+	searchArg := &api.GetInstancesByIdArg{}
+	if nodeId != "" {
+		searchArg.NodeId = nodeId
+	} else {
+		// clusterId is guaranteed to be non-empty here due to above use of currentTreeIds if clusterId is not provided
+		searchArg.ClusterId = clusterId
+	}
+
+	instances, getErr := api.GetInstancesById(ctx, client, searchArg)
+	if getErr != nil {
+		return mcp.NewToolResultError(getErr.Error()), nil
+	}
+
+	filteredInstances := filterInstances(instances, nameFilter, vcpusFilter, memoryFilter, autostartFilter)
+	return mcp.NewToolResultJSON(&getInstancesInNodeOrClusterResult{
+		Instances: filteredInstances,
+	})
+}
+
+// Perform filtering here since the PCE API does not support such filters (yet)
+func filterInstances(instances *api.GetInstancesByIdResponse, nameFilter string, vcpusFilter map[string]int, memoryFilter map[string]int, autostartFilter *bool) *api.GetInstancesByIdResponse {
+	var filtered api.GetInstancesByIdResponse
+	for _, instance := range *instances {
+		if !applyStringFilter(instance.Name, nameFilter) {
+			continue
+		}
+		if !applyNumberFilter(instance.Vcpus, vcpusFilter) {
+			continue
+		}
+		if !applyNumberFilter(instance.Memory, memoryFilter) {
+			continue
+		}
+		if !applyBoolFilter(instance.Autostart, autostartFilter) {
+			continue
+		}
+
+		filtered = append(filtered, instance)
+	}
+
+	return &filtered
+}

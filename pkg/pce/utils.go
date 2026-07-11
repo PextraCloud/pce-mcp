@@ -18,6 +18,7 @@ package pce
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/PextraCloud/pce-mcp/internal/session"
 	"github.com/PextraCloud/pce-mcp/pkg/api"
@@ -90,6 +91,22 @@ func optionalParam[T any](r mcp.CallToolRequest, p string) (T, error) {
 	return r.GetArguments()[p].(T), nil
 }
 
+// Same as optionalParam, but returns a pointer to the value instead of the value itself. This allows for distinguishing between a missing parameter and a parameter with a zero value.
+func optionalParamPtr[T any](r mcp.CallToolRequest, p string) (*T, error) {
+	// Check if the parameter is present in the request
+	if _, ok := r.GetArguments()[p]; !ok {
+		return nil, nil
+	}
+
+	// Check if the parameter is of the expected type
+	if _, ok := r.GetArguments()[p].(T); !ok {
+		return nil, fmt.Errorf("parameter %s is not of type %T, is %T", p, *new(T), r.GetArguments()[p])
+	}
+
+	val := r.GetArguments()[p].(T)
+	return &val, nil
+}
+
 func clientForRequest(ctx context.Context, req mcp.CallToolRequest) (*api.Client, error) {
 	s := server.ClientSessionFromContext(ctx)
 	if s == nil {
@@ -112,6 +129,76 @@ func clientForRequest(ctx context.Context, req mcp.CallToolRequest) (*api.Client
 	}
 
 	return client, nil
+}
+
+func mcpToolOptionStringFilter(name, description string) mcp.ToolOption {
+	return mcp.WithString(name,
+		mcp.Description(fmt.Sprintf("Optionally filter for matching %s, case-insensitive, partial match", description)),
+	)
+}
+
+func applyStringFilter(value, filter string) bool {
+	if filter == "" {
+		return true
+	}
+	return strings.Contains(strings.ToLower(value), strings.ToLower(filter))
+}
+
+func mcpToolOptionNumberFilter(name, description string) mcp.ToolOption {
+	return mcp.WithObject(name,
+		mcp.Description(fmt.Sprintf("Optionally filter for %s, using the following operators: gt (greater than), lt (less than), eq (equal to)", description)),
+		mcp.Properties(map[string]any{
+			"gt": map[string]any{"type": "number", "description": fmt.Sprintf("Filter for %s greater than this value", description)},
+			"lt": map[string]any{"type": "number", "description": fmt.Sprintf("Filter for %s less than this value", description)},
+			"eq": map[string]any{"type": "number", "description": fmt.Sprintf("Filter for %s equal to this value", description)},
+		}),
+	)
+}
+
+func convertFilterToInt(filter map[string]any) map[string]int {
+	if filter == nil {
+		return nil
+	}
+
+	intFilter := make(map[string]int)
+	for key, value := range filter {
+		// JSON numbers are unmarshaled as float64, so we need to convert them to int
+		if floatVal, ok := value.(float64); ok {
+			intFilter[key] = int(floatVal)
+		}
+	}
+	return intFilter
+}
+
+func applyNumberFilter(value int, filter map[string]int) bool {
+	if filter == nil {
+		return true
+	}
+
+	if gt, ok := filter["gt"]; ok && value <= gt {
+		return false
+	}
+	if lt, ok := filter["lt"]; ok && value >= lt {
+		return false
+	}
+	if eq, ok := filter["eq"]; ok && value != eq {
+		return false
+	}
+
+	return true
+}
+
+func mcpToolOptionBoolFilter(name, description string) mcp.ToolOption {
+	return mcp.WithBoolean(name,
+		mcp.Description(fmt.Sprintf("Optionally filter for %s, using either 'true' or 'false'", description)),
+	)
+}
+
+func applyBoolFilter(value bool, filter *bool) bool {
+	if filter == nil {
+		return true
+	}
+	return value == *filter
 }
 
 var mcpToolOptionDestroyConfirmation = mcp.WithBoolean("are_you_sure",

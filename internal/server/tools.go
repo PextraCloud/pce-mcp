@@ -61,6 +61,7 @@ func addNodeTools(s *server.MCPServer) {
 }
 
 func addInstanceTools(s *server.MCPServer) {
+	s.AddTool(pce.SearchInstances())
 	s.AddTool(pce.GetInstancesInNode())
 	s.AddTool(pce.GetInstancesInCluster())
 	s.AddTool(pce.PowerInstance())
