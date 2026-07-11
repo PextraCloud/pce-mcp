@@ -30,6 +30,14 @@ func addOrganizationTools(s *server.MCPServer) {
 	s.AddTool(pce.DestroyOrganization())
 }
 
+func addDatacenterTools(s *server.MCPServer) {
+	s.AddTool(pce.ListDatacenters())
+	s.AddTool(pce.GetDatacenter())
+	s.AddTool(pce.CreateDatacenter())
+	s.AddTool(pce.UpdateDatacenter())
+	s.AddTool(pce.DestroyDatacenter())
+}
+
 func addUserTools(s *server.MCPServer) {
 	s.AddTool(pce.ListUsersInOrganizationById())
 	s.AddTool(pce.InvalidateUserSessionsById())
@@ -64,6 +72,7 @@ func addContextTools(s *server.MCPServer) {
 func AddTools(s *server.MCPServer) {
 	addContextTools(s)
 	addOrganizationTools(s)
+	addDatacenterTools(s)
 	addUserTools(s)
 	addClusterTools(s)
 	addNodeTools(s)
