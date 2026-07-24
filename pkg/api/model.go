@@ -136,6 +136,7 @@ type NodeHardwareMemory struct {
 	Bank  int  `json:"bank"`
 	Empty bool `json:"empty"`
 	Data  struct {
+		// The size of the memory bank in gibibytes (GiB)
 		Size    int    `json:"size"`
 		Type    string `json:"type"`
 		ECC     bool   `json:"ecc"`
