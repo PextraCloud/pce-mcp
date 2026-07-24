@@ -112,6 +112,23 @@ type StoragePoolDetail struct {
 	VolumeCount int `json:"volume_count"`
 }
 
+type VolumeList struct {
+	Id            string  `json:"id"`
+	StoragePoolId string  `json:"storage_pool_id"`
+	NodeId        string  `json:"node_id"`
+	Name          string  `json:"name"`
+	FqName        string  `json:"fq_name"`
+	Description   string  `json:"description"`
+	Status        int     `json:"status"`
+	Size          float64 `json:"size"`
+	Metadata      struct {
+		Driver string `json:"driver"`
+	} `json:"metadata"`
+	Attached   bool   `json:"attached"`
+	AttachedTo string `json:"attached_to"`
+	Creation   string `json:"creation"`
+}
+
 type ImageList struct {
 	Name          string                `json:"name"`
 	SizeMB        int64                 `json:"size"`

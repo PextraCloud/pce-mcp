@@ -102,25 +102,6 @@ func GetNodeLicenseById(ctx context.Context, c *Client, arg *GetNodeByIdArg) (*G
 	return &resp, nil
 }
 
-type GetNodeStoragePoolsByIdArg struct {
-	NodeId string
-}
-type GetNodeStoragePoolsByIdResponse = []StoragePoolDetail
-
-func GetNodeStoragePoolsById(ctx context.Context, c *Client, arg *GetNodeStoragePoolsByIdArg) (*GetNodeStoragePoolsByIdResponse, *APIError) {
-	if arg == nil || arg.NodeId == "" {
-		return nil, NewAPIError(400, "node_id is required")
-	}
-
-	path := c.ExpandPath("/v1/nodes/{node_id}/storage/pools", map[string]string{"node_id": arg.NodeId})
-
-	var resp GetNodeStoragePoolsByIdResponse
-	if apiErr := c.Get(ctx, path, nil, &resp); apiErr != nil {
-		return nil, apiErr
-	}
-	return &resp, nil
-}
-
 type GetNodePciDevicesByIdArg struct {
 	NodeId string
 }
