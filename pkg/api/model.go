@@ -119,3 +119,26 @@ type ImageList struct {
 	Type          enum.InstanceTypeEnum `json:"type"`
 	StoragePoolId string                `json:"storage_pool_id"`
 }
+
+type NodeCPUModel struct {
+	Name         string `json:"name"`
+	Vendor       string `json:"vendor"`
+	Experimental bool   `json:"experimental"`
+}
+
+type NodeMachineType struct {
+	Name     string `json:"name"`
+	MaxVcpus int    `json:"max_vcpus"`
+}
+
+type NodeVirtualizationCapability struct {
+	Architecture   string            `json:"arch"`
+	WordSize       int               `json:"wordsize"`
+	Emulator       string            `json:"emulator"`
+	KVMSupported   bool              `json:"kvm_supported"`
+	Firmware       map[string]any    `json:"firmware"`
+	CPUModels      []NodeCPUModel    `json:"cpu_models"`
+	DefaultMachine string            `json:"default_machine"`
+	Machines       []NodeMachineType `json:"machines"`
+	Features       map[string]bool   `json:"features"`
+}
