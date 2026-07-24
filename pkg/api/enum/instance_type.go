@@ -27,3 +27,18 @@ const (
 func (e InstanceTypeEnum) String() string {
 	return [...]string{"docker", "lxc", "qemu", "podman"}[e]
 }
+
+func InstanceTypeEnumFromString(s string) (InstanceTypeEnum, bool) {
+	switch s {
+	case "docker":
+		return InstanceTypeEnumDocker, true
+	case "lxc":
+		return InstanceTypeEnumLXC, true
+	case "qemu":
+		return InstanceTypeEnumQEMU, true
+	case "podman":
+		return InstanceTypeEnumPodman, true
+	default:
+		return 0, false
+	}
+}

@@ -15,7 +15,12 @@ limitations under the License.
 */
 package api
 
-import "github.com/PextraCloud/pce-mcp/pkg/api/enum"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/PextraCloud/pce-mcp/pkg/api/enum"
+)
 
 type OrganizationDetail struct {
 	Organization struct {
@@ -295,25 +300,50 @@ type VswitchList struct {
 	UplinkCount    int                  `json:"uplink_count"`
 }
 
+type StandalonePortGroupConfig struct {
+	Type enum.PortGroupTypeEnum `json:"type"`
+	Data struct {
+		Type         enum.PortGroupTypeEnum `json:"_type"`
+		VlanId       *int                   `json:"vlan_id"`
+		TrunkVlans   []int                  `json:"trunk_vlans"`
+		NativeVlanId *int                   `json:"native_vlan_id"`
+	} `json:"data"`
+	FirewallRules []NetworkFirewallRule `json:"firewall_rules"`
+	Interfaces    []struct {
+		Name       string `json:"name"`
+		MacAddress string `json:"mac_address"`
+		IPv4       string `json:"ipv4"`
+		IPv6       string `json:"ipv6"`
+	} `json:"interfaces"`
+}
+
+// Show summary of StandalonePortGroupConfig
+func (c StandalonePortGroupConfig) String() string {
+	var res strings.Builder
+
+	switch c.Type {
+	case enum.PortGroupTypeAccess:
+		fmt.Fprintf(&res, "Access VLAN %d", *c.Data.VlanId)
+	case enum.PortGroupTypeTrunk:
+		fmt.Fprintf(&res, "Trunk VLANs %v ", c.Data.TrunkVlans)
+		if c.Data.NativeVlanId != nil {
+			fmt.Fprintf(&res, "(native VLAN %d)", *c.Data.NativeVlanId)
+		} else {
+			fmt.Fprintf(&res, "(no native VLAN)")
+		}
+	case enum.PortGroupTypeUntagged:
+		res.WriteString("Untagged (no VLAN)")
+	default:
+		res.WriteString("Unknown")
+	}
+
+	return res.String()
+}
+
 type StandalonePortGroupList struct {
-	VswitchId   string `json:"vswitch_id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Config      struct {
-		Type enum.PortGroupTypeEnum `json:"type"`
-		Data struct {
-			Type         enum.PortGroupTypeEnum `json:"_type"`
-			VlanId       *int                   `json:"vlan_id"`
-			TrunkVlans   []int                  `json:"trunk_vlans"`
-			NativeVlanId *int                   `json:"native_vlan_id"`
-		} `json:"data"`
-		FirewallRules []NetworkFirewallRule `json:"firewall_rules"`
-		Interfaces    []struct {
-			Name       string `json:"name"`
-			MacAddress string `json:"mac_address"`
-			IPv4       string `json:"ipv4"`
-			IPv6       string `json:"ipv6"`
-		} `json:"interfaces"`
-	} `json:"config"`
-	Creation string `json:"creation"`
+	VswitchId   string                    `json:"vswitch_id"`
+	Name        string                    `json:"name"`
+	Description string                    `json:"description"`
+	Config      StandalonePortGroupConfig `json:"config"`
+	Creation    string                    `json:"creation"`
 }
