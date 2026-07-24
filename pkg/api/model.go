@@ -245,3 +245,75 @@ type NodeVirtualizationCapability struct {
 	Machines       []NodeMachineType `json:"machines"`
 	Features       map[string]bool   `json:"features"`
 }
+
+type NetworkFirewallRule struct {
+	L2 struct {
+		Source       string `json:"src"`
+		Destination  string `json:"dst"`
+		Protocol     string `json:"protocol"`
+		Vlan         int    `json:"vlan"`
+		VlanPriority int    `json:"vlan_priority"`
+	} `json:"l2"`
+
+	L3 struct {
+		Source      string `json:"src"`
+		Destination string `json:"dst"`
+		Protocol    string `json:"protocol"`
+	} `json:"l3"`
+
+	L4 struct {
+		Source      int `json:"src"`
+		Destination int `json:"dst"`
+		IcmpType    int `json:"icmp_type"`
+		IcmpCode    int `json:"icmp_code"`
+	} `json:"l4"`
+}
+
+type VswitchConfigSecurity struct {
+	MacTable struct {
+		Maximum   int `json:"maximum"`
+		AgingTime int `json:"aging_time"`
+	} `json:"mac_table"`
+
+	FirewallRules []NetworkFirewallRule `json:"firewall_rules"`
+}
+
+type VswitchConfig struct {
+	Security VswitchConfigSecurity `json:"security"`
+	Uplinks  []string              `json:"uplinks"`
+}
+
+type VswitchList struct {
+	Id             string               `json:"id"`
+	Type           enum.VswitchTypeEnum `json:"type"`
+	NodeId         string               `json:"node_id"`
+	Name           string               `json:"name"`
+	Description    string               `json:"description"`
+	Config         VswitchConfig        `json:"config"`
+	Creation       string               `json:"creation"`
+	PortGroupCount int                  `json:"port_group_count"`
+	UplinkCount    int                  `json:"uplink_count"`
+}
+
+type StandalonePortGroupList struct {
+	VswitchId   string `json:"vswitch_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Config      struct {
+		Type enum.PortGroupTypeEnum `json:"type"`
+		Data struct {
+			Type         enum.PortGroupTypeEnum `json:"_type"`
+			VlanId       *int                   `json:"vlan_id"`
+			TrunkVlans   []int                  `json:"trunk_vlans"`
+			NativeVlanId *int                   `json:"native_vlan_id"`
+		} `json:"data"`
+		FirewallRules []NetworkFirewallRule `json:"firewall_rules"`
+		Interfaces    []struct {
+			Name       string `json:"name"`
+			MacAddress string `json:"mac_address"`
+			IPv4       string `json:"ipv4"`
+			IPv6       string `json:"ipv6"`
+		} `json:"interfaces"`
+	} `json:"config"`
+	Creation string `json:"creation"`
+}
