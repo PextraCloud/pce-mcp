@@ -58,6 +58,8 @@ type getDeployInstanceContextNetwork struct {
 
 type getDeployInstanceContextResult struct {
 	NodeId       string
+NodeVcpus    int
+	NodeMemoryMB int
 	InstanceType string
 	// Only return image names (unique)
 	Images []string
@@ -110,6 +112,10 @@ func handleGetDeployInstanceContext(ctx context.Context, req mcp.CallToolRequest
 		nodeId = currentIds.NodeId
 	}
 
+hardware, apiErr := api.GetNodeHardwareById(ctx, client, &api.GetNodeHardwareByIdArg{NodeId: nodeId})
+	if apiErr != nil {
+		return mcp.NewToolResultError(apiErr.Error()), nil
+	}
 	images, apiErr := api.ListImagesByNode(ctx, client, &api.ListImagesByNodeArg{NodeId: nodeId})
 	if apiErr != nil {
 		return mcp.NewToolResultError(apiErr.Error()), nil
@@ -135,7 +141,18 @@ func handleGetDeployInstanceContext(ctx context.Context, req mcp.CallToolRequest
 		return mcp.NewToolResultError(apiErr.Error()), nil
 	}
 
-	result := &getDeployInstanceContextResult{}
+// Accumulate total memory in MB from all memory banks (each bank size is in GiB)
+	nodeMemoryMb := 0
+	for _, bank := range hardware.Memory {
+		nodeMemoryMb += bank.Data.Size * 1024
+	}
+
+	result := &getDeployInstanceContextResult{
+		NodeId:       nodeId,
+		NodeVcpus:    hardware.Vcpus,
+		NodeMemoryMB: nodeMemoryMb,
+		InstanceType: instanceType.String(),
+	}
 
 	// Available storage pools
 	// Return empty list for LXC as storage pools for LXC instances are not currently supported
