@@ -199,14 +199,14 @@ type StoragePoolDetail struct {
 }
 
 type VolumeList struct {
-	Id            string  `json:"id"`
-	StoragePoolId string  `json:"storage_pool_id"`
-	NodeId        string  `json:"node_id"`
-	Name          string  `json:"name"`
-	FqName        string  `json:"fq_name"`
-	Description   string  `json:"description"`
-	Status        int     `json:"status"`
-	Size          float64 `json:"size"`
+	Id            string                `json:"id"`
+	StoragePoolId string                `json:"storage_pool_id"`
+	NodeId        string                `json:"node_id"`
+	Name          string                `json:"name"`
+	FqName        string                `json:"fq_name"`
+	Description   string                `json:"description"`
+	Status        enum.VolumeStatusEnum `json:"status"`
+	Size          float64               `json:"size"`
 	Metadata      struct {
 		Driver string `json:"driver"`
 	} `json:"metadata"`
