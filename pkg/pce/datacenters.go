@@ -138,17 +138,20 @@ func CreateDatacenter() (mcp.Tool, server.ToolHandlerFunc) {
 }
 
 func handleCreateDatacenter(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	name, err := requiredParam[string](req, "name")
-	if err != nil {
+	type reqType struct {
+		Name           string `json:"name"`
+		Description    string `json:"description"`
+		OrganizationId string `json:"organization_id"`
+	}
+
+	args := &reqType{}
+	if err := req.BindArguments(args); err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	description, _ := optionalParam[string](req, "description")
-
-	organizationId, err := requiredParam[string](req, "organization_id")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
+	name := args.Name
+	description := args.Description
+	organizationId := args.OrganizationId
 
 	client, err := clientForRequest(ctx, req)
 	if err != nil {
