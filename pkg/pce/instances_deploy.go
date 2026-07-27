@@ -87,13 +87,22 @@ func GetDeployInstanceContext() (mcp.Tool, server.ToolHandlerFunc) {
 }
 
 func handleGetDeployInstanceContext(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	instanceTypeString, _ := requiredParam[string](req, "instance_type")
-	instanceType, ok := enum.InstanceTypeEnumFromString(instanceTypeString)
+	type reqType struct {
+		NodeId             string `json:"node_id"`
+		InstanceTypeString string `json:"instance_type"`
+	}
+
+	args := &reqType{}
+	if err := req.BindArguments(args); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	instanceType, ok := enum.InstanceTypeEnumFromString(args.InstanceTypeString)
 	if !ok {
 		return mcp.NewToolResultError("instance_type not valid"), nil
 	}
 
-	nodeId, _ := optionalParam[string](req, "node_id")
+	nodeId := args.NodeId
 
 	client, err := clientForRequest(ctx, req)
 	if err != nil {
