@@ -24,5 +24,15 @@ const (
 )
 
 func (e PortGroupTypeEnum) String() string {
-	return [...]string{"Access", "Trunk", "Untagged"}[e]
+	switch e {
+	case PortGroupTypeAccess:
+		return "access"
+	case PortGroupTypeTrunk:
+		return "trunk"
+	case PortGroupTypeUntagged:
+		return "untagged"
+	default:
+		// This should never happen
+		panic("invalid PortGroupTypeEnum value")
+	}
 }
