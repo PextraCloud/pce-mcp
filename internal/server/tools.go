@@ -65,6 +65,7 @@ func addInstanceTools(s *server.MCPServer) {
 	s.AddTool(pce.PowerInstance())
 	// s.AddTaskTool(pce.PowerInstanceTask())
 	s.AddTool(pce.GetDeployInstanceContext())
+	s.AddTool(pce.DeployInstance())
 }
 
 func addContextTools(s *server.MCPServer) {
