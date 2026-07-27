@@ -30,8 +30,11 @@ func ListStandaloneVswitches(ctx context.Context, c *Client, arg *ListStandalone
 		return nil, NewAPIError(400, "node_id is required")
 	}
 
+	query := make(url.Values)
+	query.Set("node_id", arg.NodeId)
+
 	var resp ListStandaloneVswitchesResponse
-	if apiErr := c.Get(ctx, "/v1/networks/vswitches/standalone", nil, &resp); apiErr != nil {
+	if apiErr := c.Get(ctx, "/v1/networks/vswitches/standalone", query, &resp); apiErr != nil {
 		return nil, apiErr
 	}
 	return resp, nil
