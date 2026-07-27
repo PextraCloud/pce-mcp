@@ -198,47 +198,33 @@ func UpdateDatacenter() (mcp.Tool, server.ToolHandlerFunc) {
 }
 
 func handleUpdateDatacenter(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	datacenterId, err := requiredParam[string](req, "datacenter_id")
-	if err != nil {
+	type reqType struct {
+		DatacenterId string                  `json:"datacenter_id"`
+		Name         string                  `json:"name"`
+		Description  string                  `json:"description"`
+		Location     *api.DatacenterLocation `json:"location"`
+	}
+
+	args := &reqType{}
+	if err := req.BindArguments(args); err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	name, _ := optionalParam[string](req, "name")
-	description, _ := optionalParam[string](req, "description")
-	location, _ := optionalParam[map[string]any](req, "location")
+	datacenterId := args.DatacenterId
+	name := args.Name
+	description := args.Description
+	location := args.Location
 
 	client, err := clientForRequest(ctx, req)
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	var locationPtr *api.DatacenterLocation
-	if location != nil {
-		// Validate that both latitude and longitude are provided
-		latVal, latOk := location["latitude"]
-		lonVal, lonOk := location["longitude"]
-		if !latOk || !lonOk {
-			return mcp.NewToolResultError("both latitude and longitude must be provided when specifying location"), nil
-		}
-
-		// Validate that latitude and longitude can be cast to float64
-		lat, latOk := latVal.(float64)
-		lon, lonOk := lonVal.(float64)
-		if !latOk || !lonOk {
-			return mcp.NewToolResultError("latitude and longitude must be numbers"), nil
-		}
-
-		locationPtr = &api.DatacenterLocation{
-			Latitude:  lat,
-			Longitude: lon,
-		}
-	}
-
 	_, updateErr := api.UpdateDatacenter(ctx, client, &api.UpdateDatacenterArg{
 		DatacenterId: datacenterId,
 		Name:         name,
 		Description:  description,
-		Location:     locationPtr,
+		Location:     location,
 	})
 	if updateErr != nil {
 		return mcp.NewToolResultError(updateErr.Error()), nil
