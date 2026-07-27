@@ -117,13 +117,26 @@ func SearchInstances() (mcp.Tool, server.ToolHandlerFunc) {
 }
 
 func handleSearchInstances(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	clusterId, _ := optionalParam[string](req, "cluster_id")
-	nodeId, _ := optionalParam[string](req, "node_id")
-	nameFilter, _ := optionalParam[string](req, "name")
-	vcpusFilterAny, _ := optionalParam[map[string]any](req, "vcpus")
-	memoryFilterAny, _ := optionalParam[map[string]any](req, "memory")
-	autostartFilter, _ := optionalParamPtr[bool](req, "autostart")
+	type reqType struct {
+		ClusterId string         `json:"cluster_id"`
+		NodeId    string         `json:"node_id"`
+		Name      string         `json:"name"`
+		Vcpus     map[string]any `json:"vcpus"`
+		Memory    map[string]any `json:"memory"`
+		Autostart *bool          `json:"autostart,omitempty"`
+	}
 
+	args := &reqType{}
+	if err := req.BindArguments(args); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+
+	clusterId := args.ClusterId
+	nodeId := args.NodeId
+	nameFilter := args.Name
+	vcpusFilterAny := args.Vcpus
+	memoryFilterAny := args.Memory
+	autostartFilter := args.Autostart
 	vcpusFilter := convertFilterToInt(vcpusFilterAny)
 	memoryFilter := convertFilterToInt(memoryFilterAny)
 
