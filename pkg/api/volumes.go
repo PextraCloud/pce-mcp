@@ -27,16 +27,14 @@ type ListVolumesByNodeOrStoragePoolArg struct {
 type ListVolumesByNodeOrStoragePoolResponse []VolumeList
 
 func ListVolumesByNodeOrStoragePool(ctx context.Context, c *Client, arg *ListVolumesByNodeOrStoragePoolArg) (*ListVolumesByNodeOrStoragePoolResponse, *APIError) {
-	if arg == nil {
-		return nil, NewAPIError(400, "either node_id or storage_pool_id is required")
-	}
-	if arg.NodeId == "" {
+	if arg == nil || arg.NodeId == "" {
 		return nil, NewAPIError(400, "node_id is required")
 	}
 
 	query := make(url.Values)
 	query.Set("node_id", arg.NodeId)
 
+	// Optional filter by storage pool ID
 	if arg.StoragePoolId != "" {
 		query.Set("storage_pool_id", arg.StoragePoolId)
 	}
