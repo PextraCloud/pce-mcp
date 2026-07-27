@@ -132,6 +132,7 @@ func GetClusterLicensingById() (mcp.Tool, server.ToolHandlerFunc) {
 			mcp.Required(),
 			mcp.Description("Unique cluster id (format: cls-<xxx>)"),
 		),
+		mcp.WithOutputSchema[api.GetClusterLicensingByIdResponse](),
 	), handleGetClusterLicensingById
 }
 

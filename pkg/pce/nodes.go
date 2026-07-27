@@ -37,6 +37,7 @@ func GetNodeById() (mcp.Tool, server.ToolHandlerFunc) {
 			mcp.Required(),
 			mcp.Description("Unique node id (format: node-<xxx>)"),
 		),
+		mcp.WithOutputSchema[api.GetNodeByIdResponse](),
 	), handleGetNodeById
 }
 
@@ -68,6 +69,7 @@ func GetCurrentNode() (mcp.Tool, server.ToolHandlerFunc) {
 			Title:        "Get Current Node",
 			ReadOnlyHint: mcp.ToBoolPtr(true),
 		}),
+		mcp.WithOutputSchema[api.GetNodeByIdResponse](),
 	), handleGetCurrentNode
 }
 
@@ -110,6 +112,7 @@ func GetNodeHardwareById() (mcp.Tool, server.ToolHandlerFunc) {
 			mcp.Required(),
 			mcp.Description("Unique node id (format: node-<xxx>)"),
 		),
+		mcp.WithOutputSchema[api.GetNodeHardwareByIdResponse](),
 	), handleGetNodeHardwareById
 }
 
@@ -149,6 +152,7 @@ func GetNodeLicenseById() (mcp.Tool, server.ToolHandlerFunc) {
 			mcp.Description("Whether to include the license key in the response. This may expose sensitive information."),
 			mcp.DefaultBool(false),
 		),
+		mcp.WithOutputSchema[api.GetNodeLicenseByIdResponse](),
 	), handleGetNodeLicenseById
 }
 
@@ -192,6 +196,7 @@ func GetNodeStoragePoolsById() (mcp.Tool, server.ToolHandlerFunc) {
 			mcp.Required(),
 			mcp.Description("Unique node id (format: node-<xxx>)"),
 		),
+		mcp.WithOutputSchema[getNodeStoragePoolsByIdResult](),
 	), handleGetNodeStoragePoolsById
 }
 
@@ -233,6 +238,7 @@ func GetNodePciDevicesById() (mcp.Tool, server.ToolHandlerFunc) {
 			mcp.Required(),
 			mcp.Description("Unique node id (format: node-<xxx>)"),
 		),
+		mcp.WithOutputSchema[getNodePciDevicesByIdResult](),
 	), handleGetNodePciDevicesById
 }
 

@@ -27,6 +27,10 @@ import (
 const organizationsHelpText = `\n\nOrganizations are the top-level entities within the Pextra CloudEnvironment (PCE) hierarchy.
 They represent distinct tenants within the cloud, each with its own users, storage, network configurations, and compute resources.` + hierarchyHelpText
 
+type listOrganizationsResult struct {
+	Organizations *api.ListOrganizationsResponse `json:"organizations"`
+}
+
 func ListOrganizations() (mcp.Tool, server.ToolHandlerFunc) {
 	return mcp.NewTool("list_organizations",
 		mcp.WithDescription(fmt.Sprintf("Retrieve a list of all organizations accessible to the user%s", organizationsHelpText)),
@@ -34,6 +38,7 @@ func ListOrganizations() (mcp.Tool, server.ToolHandlerFunc) {
 			Title:        "List Organizations",
 			ReadOnlyHint: mcp.ToBoolPtr(true),
 		}),
+		mcp.WithOutputSchema[listOrganizationsResult](),
 	), handleListOrganizations
 }
 
@@ -48,7 +53,9 @@ func handleListOrganizations(ctx context.Context, req mcp.CallToolRequest) (*mcp
 		return mcp.NewToolResultError(listErr.Error()), nil
 	}
 
-	return mcp.NewToolResultJSON(orgs)
+	return mcp.NewToolResultJSON(&listOrganizationsResult{
+		Organizations: orgs,
+	})
 }
 
 func GetOrganizationById() (mcp.Tool, server.ToolHandlerFunc) {
@@ -62,6 +69,7 @@ func GetOrganizationById() (mcp.Tool, server.ToolHandlerFunc) {
 			mcp.Required(),
 			mcp.Description("Unique organization id (format: org-<xxx>)"),
 		),
+		mcp.WithOutputSchema[api.GetOrganizationByIdResponse](),
 	), handleGetOrganizationById
 }
 
@@ -93,6 +101,7 @@ func GetCurrentOrganization() (mcp.Tool, server.ToolHandlerFunc) {
 			Title:        "Get Current Organization",
 			ReadOnlyHint: mcp.ToBoolPtr(true),
 		}),
+		mcp.WithOutputSchema[api.GetOrganizationByIdResponse](),
 	), handleGetCurrentOrganization
 }
 

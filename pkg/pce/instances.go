@@ -28,6 +28,11 @@ type getInstancesInNodeOrClusterResult struct {
 	Instances *api.GetInstancesByIdResponse `json:"instances"`
 }
 
+type powerInstanceResult struct {
+	Message string `json:"message"`
+	TaskId  string `json:"task_id"`
+}
+
 func PowerInstance() (mcp.Tool, server.ToolHandlerFunc) {
 	return mcp.NewTool("power_instance",
 		mcp.WithDescription("Perform a power action on a specific instance (start, stop, restart, kill)"),
@@ -53,6 +58,7 @@ func PowerInstance() (mcp.Tool, server.ToolHandlerFunc) {
 			mcp.Required(),
 			mcp.Description("Power action to perform. start = power on, stop = graceful shutdown (may do nothing if the guest OS does not support it), restart = graceful reboot, kill = immediate power off, like pulling the power plug"),
 		),
+		mcp.WithOutputSchema[powerInstanceResult](),
 	), handlePowerInstance
 }
 
@@ -86,10 +92,7 @@ func handlePowerInstance(ctx context.Context, req mcp.CallToolRequest) (*mcp.Cal
 		return mcp.NewToolResultError(powerErr.Error()), nil
 	}
 
-	return mcp.NewToolResultJSON(struct {
-		Message string `json:"message"`
-		TaskId  string `json:"task_id"`
-	}{
+	return mcp.NewToolResultJSON(&powerInstanceResult{
 		Message: "Power action initiated successfully",
 		TaskId:  res.TaskId,
 	})
