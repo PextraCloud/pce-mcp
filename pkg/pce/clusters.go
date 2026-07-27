@@ -38,7 +38,15 @@ func GetCluster() (mcp.Tool, server.ToolHandlerFunc) {
 }
 
 func handleGetCluster(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	clusterId, _ := optionalParam[string](req, "cluster_id")
+	type reqType struct {
+		ClusterId string `json:"cluster_id"`
+	}
+
+	args := &reqType{}
+	if err := req.BindArguments(args); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	clusterId := args.ClusterId
 
 	client, err := clientForRequest(ctx, req)
 	if err != nil {
