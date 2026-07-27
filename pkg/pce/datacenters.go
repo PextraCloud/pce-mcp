@@ -42,7 +42,15 @@ func ListDatacenters() (mcp.Tool, server.ToolHandlerFunc) {
 }
 
 func handleListDatacenters(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	organizationId, _ := optionalParam[string](req, "organization_id")
+	type reqType struct {
+		OrganizationId string `json:"organization_id"`
+	}
+
+	args := &reqType{}
+	if err := req.BindArguments(args); err != nil {
+		return mcp.NewToolResultError(err.Error()), nil
+	}
+	organizationId := args.OrganizationId
 
 	client, err := clientForRequest(ctx, req)
 	if err != nil {
