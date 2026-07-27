@@ -17,6 +17,7 @@ package pce
 
 import (
 	"context"
+"fmt"
 
 	"github.com/PextraCloud/pce-mcp/pkg/api"
 	"github.com/PextraCloud/pce-mcp/pkg/api/enum"
@@ -25,49 +26,45 @@ import (
 )
 
 const (
-	deployInstanceDefaultCPUCores       = 1
-	deployInstanceDefaultMemoryMB       = 2048
-	deployInstanceDefaultQEMUStorageGB  = 4.0
-	deployInstanceDefaultQEMUFirmware   = "efi"
-	deployInstanceDefaultQEMUNetwork    = "virtio"
-	deployInstanceDefaultQEMUVolumeBus  = "virtio"
-	deployInstanceDefaultQEMUVolumeDev  = "/dev/sdb"
-	deployInstanceDefaultQEMUVolumeType = "qcow2"
+	deployInstanceDefaultCPUCores        = 1
+	deployInstanceDefaultMemoryMB        = 2048
+		deployInstanceDefaultQEMUFirmware    = "efi"
+	deployInstanceDefaultQEMUMachineType = "q35"
 )
 
 type getDeployInstanceContextStoragePool struct {
-	Id          string
-	Name        string
-	Type        string
-	AvailableGB float64
-}
-
-type getDeployInstanceContextVolume struct {
-	Id     string
-	Name   string
-	SizeGB float64
+	Id          string  `json:"id"`
+	Name        string  `json:"name"`
+	Type        string  `json:"type"`
+	AvailableGB float64 `json:"available_gb"`
 }
 
 type getDeployInstanceContextNetwork struct {
-	VswitchId              string
-	VswitchName            string
-	VswitchHasUplinks      bool
-	PortGroupName          string
-	PortGroupConfigSummary string
+	VswitchId              string `json:"vswitch_id"`
+	VswitchName            string `json:"vswitch_name"`
+	VswitchHasUplinks      bool   `json:"vswitch_has_uplinks"`
+	PortGroupName          string `json:"port_group_name"`
+	PortGroupConfigSummary string `json:"port_group_config_summary"`
+}
+
+type getDeployInstanceContextVolume struct {
+	Id     string  `json:"id"`
+	Name   string  `json:"name"`
+	SizeGB float64 `json:"size_gb"`
 }
 
 type getDeployInstanceContextResult struct {
-	NodeId       string
-NodeVcpus    int
-	NodeMemoryMB int
-	InstanceType string
+	NodeId       string                `json:"node_id"`
+NodeVcpus    int                   `json:"node_vcpus"`
+	NodeMemoryMB int                   `json:"node_memory_mb"`
+	InstanceType enum.InstanceTypeEnum `json:"instance_type"`
 	// Only return image names (unique)
-	Images []string
+	Images []string `json:"images"`
 	// Available storage pools
-	AvailableStoragePools   []getDeployInstanceContextStoragePool
-	Networks                []getDeployInstanceContextNetwork
-	AvailableVolumes        []getDeployInstanceContextVolume
-	RecommendedArchitecture string
+	AvailableStoragePools   []getDeployInstanceContextStoragePool `json:"available_storage_pools"`
+	Networks                []getDeployInstanceContextNetwork     `json:"networks"`
+	AvailableVolumes        []getDeployInstanceContextVolume      `json:"available_volumes"`
+	RecommendedArchitecture string                                `json:"recommended_architecture"`
 }
 
 func GetDeployInstanceContext() (mcp.Tool, server.ToolHandlerFunc) {
@@ -82,7 +79,7 @@ func GetDeployInstanceContext() (mcp.Tool, server.ToolHandlerFunc) {
 		),
 		mcp.WithString("instance_type",
 			mcp.Required(),
-			mcp.Description("Type of instance to deploy (e.g., qemu, lxc); images will be filtered based on this type. LXC instances currently do not support storage pools, so the storage pool list will be empty for LXC."),
+			mcp.Description("Type of instance to deploy (e.g., qemu, lxc); images will be filtered based on this type. LXC instances currently do not support attaching volumes, so the storage pool list will be empty for LXC."),
 			mcp.Enum("qemu", "lxc"),
 		),
 		mcp.WithOutputSchema[getDeployInstanceContextResult](),
@@ -151,7 +148,7 @@ hardware, apiErr := api.GetNodeHardwareById(ctx, client, &api.GetNodeHardwareByI
 		NodeId:       nodeId,
 		NodeVcpus:    hardware.Vcpus,
 		NodeMemoryMB: nodeMemoryMb,
-		InstanceType: instanceType.String(),
+		InstanceType: instanceType,
 	}
 
 	// Available storage pools
