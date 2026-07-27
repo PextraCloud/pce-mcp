@@ -123,7 +123,6 @@ func CreateDatacenter() (mcp.Tool, server.ToolHandlerFunc) {
 			mcp.Description("Optional description of the new datacenter"),
 		),
 		mcp.WithString("organization_id",
-			mcp.Required(),
 			mcp.Description("Organization to create the datacenter in (format: org-<xxx>); if not specified, the current organization is used"),
 		),
 		mcp.WithOutputSchema[api.CreateDatacenterResponse](),
