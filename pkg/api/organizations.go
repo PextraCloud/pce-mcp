@@ -98,3 +98,35 @@ func DeleteOrganizationById(ctx context.Context, c *Client, arg *DeleteOrganizat
 	}
 	return &resp, nil
 }
+
+/* lists ai providers */
+type ListAIProvidersForOrganizationArg struct {
+	OrganizationId string
+}
+
+type ListAIProvidersForOrganizationResponse []struct {
+	Id             string  `json:"id"`
+	OrganizationId string  `json:"organization_id"`
+	Name           string  `json:"name"`
+	Description    string  `json:"description"`
+	Type           string  `json:"type"`
+	DefaultModel   string  `json:"default_model"`
+	BaseUrl        string  `json:"base_url"`
+	Enabled        bool    `json:"enabled"`
+	Creation       *string `json:"creation"`
+}
+
+func ListAIProvidersForOrganization(ctx context.Context, c *Client, arg *ListAIProvidersForOrganizationArg) (*ListAIProvidersForOrganizationResponse, *APIError) {
+	if arg == nil || arg.OrganizationId == "" {
+		return nil, NewAPIError(400, "organization_id is required")
+	}
+
+	path := c.ExpandPath("/v1/organizations/{organization_id}/ai/providers/", map[string]string{"organization_id": arg.OrganizationId})
+
+	var resp ListAIProvidersForOrganizationResponse
+	if apiErr := c.Get(ctx, path, nil, &resp); apiErr != nil {
+		return nil, apiErr
+	}
+
+	return &resp, nil
+}

@@ -24,6 +24,7 @@ func addOrganizationTools(s *server.MCPServer) {
 	s.AddTool(pce.ListOrganizations())
 	s.AddTool(pce.GetOrganizationById())
 	s.AddTool(pce.GetCurrentOrganization())
+	s.AddTool(pce.ListAIProvidersForOrganization())
 	// s.AddTool(pce.ListOrganizationAuditLogsById())
 	// s.AddTool(pce.ListOrganizationUserLockoutsById())
 	s.AddTool(pce.CreateOrganization())
@@ -34,6 +35,7 @@ func addUserTools(s *server.MCPServer) {
 	s.AddTool(pce.ListUsersInOrganizationById())
 	s.AddTool(pce.InvalidateUserSessionsById())
 	s.AddTool(pce.DeleteUserById())
+	s.AddTool(pce.GetUserSession())
 }
 
 func addClusterTools(s *server.MCPServer) {
@@ -55,6 +57,12 @@ func addInstanceTools(s *server.MCPServer) {
 	s.AddTool(pce.GetInstancesInNode())
 	s.AddTool(pce.GetInstancesInCluster())
 	s.AddTool(pce.PowerInstance())
+	s.AddTool(pce.GetDeployInstanceContext())
+	s.AddTool(pce.DeployInstance())
+	s.AddTool(pce.AttachUSBDevice())
+	s.AddTool(pce.AttachPCIDevice())
+	s.AddTool(pce.ListAllDevicesAttachedToInstance())
+	s.AddTool(pce.DetachDeviceFromInstance())
 }
 
 func AddTools(s *server.MCPServer) {
@@ -63,4 +71,5 @@ func AddTools(s *server.MCPServer) {
 	addClusterTools(s)
 	addNodeTools(s)
 	addInstanceTools(s)
+	s.AddTool(pce.GetPCEHealthcheck())
 }

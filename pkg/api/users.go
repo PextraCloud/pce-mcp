@@ -23,6 +23,36 @@ import (
 	"strconv"
 )
 
+type GetUserSessionArg struct{}
+type GetUserSessionResponse struct {
+	// <Go name>  <type> <json tag>
+	Authenticated bool `json:"authenticated"`
+	User          struct {
+		Id             string  `json:"id"`
+		OrganizationId string  `json:"organization_id"`
+		Username       string  `json:"user"`
+		Enabled        bool    `json:"enabled"`
+		Locked         bool    `json:"locked"`
+		Expired        bool    `json:"expired"`
+		Description    *string `json:"description,omitempty"`
+	}
+}
+
+func GetUserSession(ctx context.Context, c *Client, arg *GetUserSessionArg) (*GetUserSessionResponse, *APIError) {
+	// Start with the path:
+	path := "/v1/users/session"
+
+	// Fill this in as the response struct
+	var resp GetUserSessionResponse
+
+	// Make request
+	if apiErr := c.Get(ctx, path, nil, &resp); apiErr != nil {
+		return nil, apiErr
+	}
+
+	return &resp, nil
+}
+
 type ListUsersInOrganizationByIdArg struct {
 	OrganizationId string
 }

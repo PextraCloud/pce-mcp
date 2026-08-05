@@ -202,6 +202,17 @@ func (c *Client) Put(ctx context.Context, path string, query url.Values, body io
 	return c.Do(req, out)
 }
 
+func (c *Client) Patch(ctx context.Context, path string, query url.Values, body io.Reader, out any) *APIError {
+	req, apiErr := c.newRequest(ctx, http.MethodPatch, path, query, body)
+	if apiErr != nil {
+		return apiErr
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	return c.Do(req, out)
+}
+
 func (c *Client) Delete(ctx context.Context, path string, query url.Values, out any) *APIError {
 	req, apiErr := c.newRequest(ctx, http.MethodDelete, path, query, nil)
 	if apiErr != nil {
