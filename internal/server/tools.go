@@ -59,6 +59,10 @@ func addInstanceTools(s *server.MCPServer) {
 	s.AddTool(pce.PowerInstance())
 	s.AddTool(pce.GetDeployInstanceContext())
 	s.AddTool(pce.DeployInstance())
+	s.AddTool(pce.AttachUSBDevice())
+	s.AddTool(pce.AttachPCIDevice())
+	s.AddTool(pce.ListAllDevicesAttachedToInstance())
+	s.AddTool(pce.DetachDeviceFromInstance())
 }
 
 func AddTools(s *server.MCPServer) {

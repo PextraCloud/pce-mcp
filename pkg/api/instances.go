@@ -90,3 +90,6 @@ func PowerInstance(ctx context.Context, c *Client, arg *PowerInstanceArg) (*Powe
 	}
 	return &resp, nil
 }
+
+// API FOR ATTACHING DEVICES
+
