@@ -2,7 +2,7 @@ module github.com/PextraCloud/pce-mcp
 
 go 1.25.5
 
-require github.com/mark3labs/mcp-go v0.56.0
+require github.com/mark3labs/mcp-go v0.57.0
 
 require github.com/spf13/cobra v1.10.2
 
