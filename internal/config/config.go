@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -57,30 +58,21 @@ func Set(c AppConfig) { cfg = c }
 // Get returns the current configuration.
 func Get() AppConfig { return cfg }
 
+func readEnvString(key string, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
 // WithEnvDefaults returns a copy of c with environment variable fallbacks applied
 // and performs validation. Returns an error if validation fails.
 func WithEnvDefaults(c AppConfig) (*AppConfig, error) {
 	// apply env fallbacks
-	if c.SSEAddr == "" {
-		if v := os.Getenv(EnvSSEAddr); v != "" {
-			c.SSEAddr = v
-		}
-	}
-	if c.HTTPAddr == "" {
-		if v := os.Getenv(EnvHTTPAddr); v != "" {
-			c.HTTPAddr = v
-		}
-	}
-	if c.PCEBaseURL == "" {
-		if v := os.Getenv(EnvBaseURL); v != "" {
-			c.PCEBaseURL = v
-		}
-	}
-	if c.PCECACertPath == "" {
-		if v := os.Getenv(EnvCACert); v != "" {
-			c.PCECACertPath = v
-		}
-	}
+	c.SSEAddr = readEnvString(EnvSSEAddr, c.SSEAddr)
+	c.HTTPAddr = readEnvString(EnvHTTPAddr, c.HTTPAddr)
+	c.PCEBaseURL = readEnvString(EnvBaseURL, c.PCEBaseURL)
+	c.PCECACertPath = readEnvString(EnvCACert, c.PCECACertPath)
 
 	// Booleans: apply env if provided (validate on parse failure)
 	if v := os.Getenv(EnvTLSSkipVerify); v != "" {
@@ -127,16 +119,16 @@ func WithEnvDefaults(c AppConfig) (*AppConfig, error) {
 		}
 	}
 
+	// TLS flags mutual exclusivity: don't allow both skip-verify and custom CA
+	if c.PCEInsecureTLS && c.PCECACertPath != "" {
+		errs = append(errs, fmt.Sprintf("only one of %s or %s may be set", EnvTLSSkipVerify, EnvCACert))
+	}
+
 	// Validate CA cert path if provided
 	if c.PCECACertPath != "" {
 		if _, err := os.Stat(c.PCECACertPath); err != nil {
 			errs = append(errs, fmt.Sprintf("%s points to invalid path: %v", EnvCACert, err))
 		}
-	}
-
-	// TLS flags mutual exclusivity: don't allow both skip-verify and custom CA
-	if c.PCEInsecureTLS && c.PCECACertPath != "" {
-		errs = append(errs, fmt.Sprintf("only one of %s or %s may be set", EnvTLSSkipVerify, EnvCACert))
 	}
 
 	// Timeout must be positive
@@ -159,9 +151,11 @@ func (e validationError) Error() string {
 	if len(e.msgs) == 0 {
 		return "validation failed"
 	}
-	out := e.msgs[0]
+	var out strings.Builder
+	out.WriteString(e.msgs[0])
 	for i := 1; i < len(e.msgs); i++ {
-		out += "; " + e.msgs[i]
+		out.WriteString("; ")
+		out.WriteString(e.msgs[i])
 	}
-	return out
+	return out.String()
 }
