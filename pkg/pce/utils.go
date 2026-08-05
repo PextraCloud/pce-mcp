@@ -91,22 +91,6 @@ func optionalParam[T any](r mcp.CallToolRequest, p string) (T, error) {
 	return r.GetArguments()[p].(T), nil
 }
 
-// Same as optionalParam, but returns a pointer to the value instead of the value itself. This allows for distinguishing between a missing parameter and a parameter with a zero value.
-func optionalParamPtr[T any](r mcp.CallToolRequest, p string) (*T, error) {
-	// Check if the parameter is present in the request
-	if _, ok := r.GetArguments()[p]; !ok {
-		return nil, nil
-	}
-
-	// Check if the parameter is of the expected type
-	if _, ok := r.GetArguments()[p].(T); !ok {
-		return nil, fmt.Errorf("parameter %s is not of type %T, is %T", p, *new(T), r.GetArguments()[p])
-	}
-
-	val := r.GetArguments()[p].(T)
-	return &val, nil
-}
-
 func clientForRequest(ctx context.Context, req mcp.CallToolRequest) (*api.Client, error) {
 	s := server.ClientSessionFromContext(ctx)
 	if s == nil {
