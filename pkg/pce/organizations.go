@@ -27,6 +27,10 @@ import (
 const organizationsHelpText = `\n\nOrganizations are the top-level entities within the Pextra CloudEnvironment (PCE) hierarchy.
 They represent distinct tenants within the cloud, each with its own users, storage, network configurations, and compute resources.` + hierarchyHelpText
 
+type listOrganizationsResult struct {
+	Organizations *api.ListOrganizationsResponse `json:"organizations"`
+}
+
 func ListOrganizations() (mcp.Tool, server.ToolHandlerFunc) {
 	return mcp.NewTool("list_organizations",
 		mcp.WithDescription(fmt.Sprintf("Retrieve a list of all organizations accessible to the user%s", organizationsHelpText)),
@@ -34,6 +38,7 @@ func ListOrganizations() (mcp.Tool, server.ToolHandlerFunc) {
 			Title:        "List Organizations",
 			ReadOnlyHint: mcp.ToBoolPtr(true),
 		}),
+		mcp.WithOutputSchema[listOrganizationsResult](),
 	), handleListOrganizations
 }
 
@@ -48,7 +53,9 @@ func handleListOrganizations(ctx context.Context, req mcp.CallToolRequest) (*mcp
 		return mcp.NewToolResultError(listErr.Error()), nil
 	}
 
-	return mcp.NewToolResultJSON(orgs)
+	return mcp.NewToolResultJSON(&listOrganizationsResult{
+		Organizations: orgs,
+	})
 }
 
 func GetOrganizationById() (mcp.Tool, server.ToolHandlerFunc) {
@@ -62,6 +69,7 @@ func GetOrganizationById() (mcp.Tool, server.ToolHandlerFunc) {
 			mcp.Required(),
 			mcp.Description("Unique organization id (format: org-<xxx>)"),
 		),
+		mcp.WithOutputSchema[api.GetOrganizationByIdResponse](),
 	), handleGetOrganizationById
 }
 
@@ -93,6 +101,7 @@ func GetCurrentOrganization() (mcp.Tool, server.ToolHandlerFunc) {
 			Title:        "Get Current Organization",
 			ReadOnlyHint: mcp.ToBoolPtr(true),
 		}),
+		mcp.WithOutputSchema[api.GetOrganizationByIdResponse](),
 	), handleGetCurrentOrganization
 }
 
@@ -176,21 +185,22 @@ func ListOrganizationUserLockoutsById() (mcp.Tool, server.ToolHandlerFunc) {
 
 func CreateOrganization() (mcp.Tool, server.ToolHandlerFunc) {
 	return mcp.NewTool("create_organization",
-		mcp.WithDescription("Create a new organization within the Pextra CloudEnvironment (PCE). Organizations are top-level entities that represent distinct tenants within the cloud."),
+		mcp.WithDescription("Create a new organization; must be run by the root user"),
 		mcp.WithToolAnnotation(mcp.ToolAnnotation{
-			Title: "Create Organization",
+			Title: "Create organization",
 		}),
 		mcp.WithString("name",
 			mcp.Required(),
 			mcp.MinLength(nameDefaultMinLength),
 			mcp.MaxLength(nameDefaultMaxLength),
-			mcp.Pattern(nameRegex(nameDefaultMinLength, nameDefaultMaxLength)), // redundant, but being explicit
-			mcp.Description("The name of the new organization."),
+			mcp.Pattern(nameRegex(nameDefaultMinLength, nameDefaultMaxLength)),
+			mcp.Description("Organization name to create"),
 		),
 		mcp.WithString("description",
 			mcp.MaxLength(descriptionDefaultMaxLength),
-			mcp.Description("A brief description of the organization."),
+			mcp.Description("Description for the new organization"),
 		),
+		mcp.WithOutputSchema[api.CreateOrganizationResponse](),
 	), handleCreateOrganization
 }
 
@@ -221,35 +231,28 @@ func handleCreateOrganization(ctx context.Context, req mcp.CallToolRequest) (*mc
 	return mcp.NewToolResultJSON(org)
 }
 
-func DeleteOrganizationById() (mcp.Tool, server.ToolHandlerFunc) {
-	return mcp.NewTool("delete_organization_by_id",
-		mcp.WithDescription("Delete an existing organization. The organization must be empty of any datacenters (and consequently clusters and nodes) before it can be deleted."),
+func DestroyOrganization() (mcp.Tool, server.ToolHandlerFunc) {
+	return mcp.NewTool("destroy_organization",
+		mcp.WithDescription("Destroy an organization, this will fail if there are any datacenters in the organization; must be run by the root user"),
 		mcp.WithToolAnnotation(mcp.ToolAnnotation{
-			Title:           "Delete Organization By ID",
+			Title:           "Destroy organization",
 			DestructiveHint: mcp.ToBoolPtr(true),
 		}),
 		mcp.WithString("organization_id",
 			mcp.Required(),
 			mcp.Description("Unique organization id (format: org-<xxx>)"),
 		),
-		mcp.WithBoolean("are_you_sure",
-			mcp.Required(),
-			mcp.Description("A safety check to prevent accidental deletions. Must be set to true to proceed with deletion."),
-		),
-	), handleDeleteOrganizationById
+		mcpToolOptionDestroyConfirmation,
+	), handleDestroyOrganization
 }
 
-func handleDeleteOrganizationById(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func handleDestroyOrganization(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	orgId, err := requiredParam[string](req, "organization_id")
 	if err != nil {
 		return mcp.NewToolResultError(err.Error()), nil
 	}
-	areYouSure, err := requiredParam[bool](req, "are_you_sure")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-	if !areYouSure {
-		return mcp.NewToolResultError("Deletion not confirmed. Set 'are_you_sure' to true to proceed."), nil
+	if !confirmDestructiveAction(req) {
+		return mcp.NewToolResultError("destructive action not confirmed"), nil
 	}
 
 	client, err := clientForRequest(ctx, req)
@@ -264,5 +267,5 @@ func handleDeleteOrganizationById(ctx context.Context, req mcp.CallToolRequest) 
 		return mcp.NewToolResultError(deleteErr.Error()), nil
 	}
 
-	return mcp.NewToolResultText(fmt.Sprintf("Organization %s deleted successfully.", orgId)), nil
+	return mcp.NewToolResultText(fmt.Sprintf("Organization %s destroyed successfully", orgId)), nil
 }

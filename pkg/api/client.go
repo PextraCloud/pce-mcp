@@ -191,6 +191,17 @@ func (c *Client) Post(ctx context.Context, path string, query url.Values, body i
 	return c.Do(req, out)
 }
 
+func (c *Client) Patch(ctx context.Context, path string, query url.Values, body io.Reader, out any) *APIError {
+	req, apiErr := c.newRequest(ctx, http.MethodPatch, path, query, body)
+	if apiErr != nil {
+		return apiErr
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	return c.Do(req, out)
+}
+
 func (c *Client) Put(ctx context.Context, path string, query url.Values, body io.Reader, out any) *APIError {
 	req, apiErr := c.newRequest(ctx, http.MethodPut, path, query, body)
 	if apiErr != nil {

@@ -27,7 +27,15 @@ func addOrganizationTools(s *server.MCPServer) {
 	// s.AddTool(pce.ListOrganizationAuditLogsById())
 	// s.AddTool(pce.ListOrganizationUserLockoutsById())
 	s.AddTool(pce.CreateOrganization())
-	s.AddTool(pce.DeleteOrganizationById())
+	s.AddTool(pce.DestroyOrganization())
+}
+
+func addDatacenterTools(s *server.MCPServer) {
+	s.AddTool(pce.ListDatacenters())
+	s.AddTool(pce.GetDatacenter())
+	s.AddTool(pce.CreateDatacenter())
+	s.AddTool(pce.UpdateDatacenter())
+	s.AddTool(pce.DestroyDatacenter())
 }
 
 func addUserTools(s *server.MCPServer) {
@@ -37,7 +45,8 @@ func addUserTools(s *server.MCPServer) {
 }
 
 func addClusterTools(s *server.MCPServer) {
-	s.AddTool(pce.GetClusterHardwareById())
+	s.AddTool(pce.GetClusterHardware())
+	s.AddTool(pce.GetCluster())
 	s.AddTool(pce.GetClusterLicensingById())
 }
 
@@ -52,13 +61,21 @@ func addNodeTools(s *server.MCPServer) {
 }
 
 func addInstanceTools(s *server.MCPServer) {
-	s.AddTool(pce.GetInstancesInNode())
-	s.AddTool(pce.GetInstancesInCluster())
+	s.AddTool(pce.SearchInstances())
 	s.AddTool(pce.PowerInstance())
+	// s.AddTaskTool(pce.PowerInstanceTask())
+	s.AddTool(pce.GetDeployInstanceContext())
+	s.AddTool(pce.DeployInstance())
+}
+
+func addContextTools(s *server.MCPServer) {
+	s.AddTool(pce.GetMe())
 }
 
 func AddTools(s *server.MCPServer) {
+	addContextTools(s)
 	addOrganizationTools(s)
+	addDatacenterTools(s)
 	addUserTools(s)
 	addClusterTools(s)
 	addNodeTools(s)

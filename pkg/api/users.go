@@ -23,6 +23,21 @@ import (
 	"strconv"
 )
 
+type GetUserSessionResponse struct {
+	Authenticated bool      `json:"authenticated"`
+	User          *UserList `json:"user,omitempty"`
+}
+
+func GetUserSession(ctx context.Context, c *Client) (*GetUserSessionResponse, *APIError) {
+	path := "/v1/users/session"
+
+	var resp GetUserSessionResponse
+	if apiErr := c.Get(ctx, path, nil, &resp); apiErr != nil {
+		return nil, apiErr
+	}
+	return &resp, nil
+}
+
 type ListUsersInOrganizationByIdArg struct {
 	OrganizationId string
 }

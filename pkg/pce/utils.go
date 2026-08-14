@@ -18,6 +18,7 @@ package pce
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/PextraCloud/pce-mcp/internal/session"
 	"github.com/PextraCloud/pce-mcp/pkg/api"
@@ -99,5 +100,132 @@ func clientForRequest(ctx context.Context, req mcp.CallToolRequest) (*api.Client
 	if req.Header != nil {
 		authorization = req.Header.Get("Authorization")
 	}
-	return session.GetSession(s.SessionID(), authorization)
+	client, err := session.GetSession(s.SessionID())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get session: %w", err)
+	}
+
+	// Update authorization header based on request `Authorization` header
+	if authorization == "" {
+		client.Headers.Del("Authorization")
+	} else {
+		client.Headers.Set("Authorization", authorization)
+	}
+
+	return client, nil
+}
+
+func mcpToolOptionStringFilter(name, description string) mcp.ToolOption {
+	return mcp.WithString(name,
+		mcp.Description(fmt.Sprintf("Optionally filter for matching %s, case-insensitive, partial match", description)),
+	)
+}
+
+func applyStringFilter(value, filter string) bool {
+	if filter == "" {
+		return true
+	}
+	return strings.Contains(strings.ToLower(value), strings.ToLower(filter))
+}
+
+func mcpToolOptionNumberFilter(name, description string) mcp.ToolOption {
+	return mcp.WithObject(name,
+		mcp.Description(fmt.Sprintf("Optionally filter for %s, using the following operators: gt (greater than), lt (less than), eq (equal to)", description)),
+		mcp.Properties(map[string]any{
+			"gt": map[string]any{"type": "number", "description": fmt.Sprintf("Filter for %s greater than this value", description)},
+			"lt": map[string]any{"type": "number", "description": fmt.Sprintf("Filter for %s less than this value", description)},
+			"eq": map[string]any{"type": "number", "description": fmt.Sprintf("Filter for %s equal to this value", description)},
+		}),
+	)
+}
+
+func convertFilterToInt(filter map[string]any) map[string]int {
+	if filter == nil {
+		return nil
+	}
+
+	intFilter := make(map[string]int)
+	for key, value := range filter {
+		// JSON numbers are unmarshaled as float64, so we need to convert them to int
+		if floatVal, ok := value.(float64); ok {
+			intFilter[key] = int(floatVal)
+		}
+	}
+	return intFilter
+}
+
+func applyNumberFilter(value int, filter map[string]int) bool {
+	if filter == nil {
+		return true
+	}
+
+	if gt, ok := filter["gt"]; ok && value <= gt {
+		return false
+	}
+	if lt, ok := filter["lt"]; ok && value >= lt {
+		return false
+	}
+	if eq, ok := filter["eq"]; ok && value != eq {
+		return false
+	}
+
+	return true
+}
+
+func mcpToolOptionBoolFilter(name, description string) mcp.ToolOption {
+	return mcp.WithBoolean(name,
+		mcp.Description(fmt.Sprintf("Optionally filter for %s, using either 'true' or 'false'", description)),
+	)
+}
+
+func applyBoolFilter(value bool, filter *bool) bool {
+	if filter == nil {
+		return true
+	}
+	return value == *filter
+}
+
+var mcpToolOptionDestroyConfirmation = mcp.WithBoolean("are_you_sure",
+	mcp.Required(),
+	mcp.Description("Must be set to true to confirm the destruction; this action is irreversible"),
+)
+
+func confirmDestructiveAction(req mcp.CallToolRequest) bool {
+	areYouSure, err := requiredParam[bool](req, "are_you_sure")
+	if err != nil {
+		return false
+	}
+	return areYouSure
+}
+
+func getCurrentNodeId(ctx context.Context, client *api.Client) (string, error) {
+	health, err := api.RunHealthcheck(ctx, client, &api.RunHealthcheckArg{})
+	if err != nil {
+		return "", err
+	}
+	return health.Id, nil
+}
+
+type currentTreeIdsResult struct {
+	NodeId         string
+	ClusterId      string
+	OrganizationId string
+}
+
+func getCurrentTreeIds(ctx context.Context, client *api.Client) (*currentTreeIdsResult, error) {
+	// TODO: caching
+	nodeId, err := getCurrentNodeId(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+
+	node, getErr := api.GetNodeById(ctx, client, &api.GetNodeByIdArg{NodeId: nodeId})
+	if getErr != nil {
+		return nil, getErr
+	}
+	return &currentTreeIdsResult{
+		NodeId:         nodeId,
+		ClusterId:      node.Node.ClusterId,
+		OrganizationId: node.Node.OrganizationId,
+	}, nil
 }
