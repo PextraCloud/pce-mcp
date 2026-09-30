@@ -158,6 +158,15 @@ func handleCreateDatacenter(ctx context.Context, req mcp.CallToolRequest) (*mcp.
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
+	// If no organization ID is provided, use the current organization ID
+	if organizationId == "" {
+		currentIds, err := getCurrentTreeIds(ctx, client)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		organizationId = currentIds.OrganizationId
+	}
+
 	datacenter, createErr := api.CreateDatacenter(ctx, client, &api.CreateDatacenterArg{
 		Name:           name,
 		Description:    description,
