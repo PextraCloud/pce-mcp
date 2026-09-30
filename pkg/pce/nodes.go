@@ -18,6 +18,7 @@ package pce
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/PextraCloud/pce-mcp/pkg/api"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -76,7 +77,7 @@ func GetCurrentNode() (mcp.Tool, server.ToolHandlerFunc) {
 func handleGetCurrentNode(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	client, err := clientForRequest(ctx, req)
 	if err != nil {
-		fmt.Println("Error retrieving session:", err)
+		log.Printf("Error retrieving session: %v", err)
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
