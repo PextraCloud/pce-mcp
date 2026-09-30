@@ -171,7 +171,7 @@ func handleGetNodeLicenseById(ctx context.Context, req mcp.CallToolRequest) (*mc
 		return mcp.NewToolResultError(err.Error()), nil
 	}
 
-	license, getErr := api.GetNodeLicenseById(ctx, client, &api.GetNodeByIdArg{
+	license, getErr := api.GetNodeLicenseById(ctx, client, &api.GetNodeLicenseByIdArg{
 		NodeId: nodeId,
 	})
 	if getErr != nil {
