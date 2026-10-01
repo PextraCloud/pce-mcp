@@ -22,6 +22,7 @@ import (
 
 	"github.com/PextraCloud/pce-mcp/internal/session"
 	"github.com/PextraCloud/pce-mcp/pkg/api"
+	"github.com/PextraCloud/pce-mcp/pkg/clusterfederation"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -113,6 +114,27 @@ func clientForRequest(ctx context.Context, req mcp.CallToolRequest) (*api.Client
 	}
 
 	return client, nil
+}
+
+// withClusterFederationIdNode retrieves the cluster federation ID for the given node and returns a new context with it
+// set. If the cluster federation ID cannot be retrieved, the original context unchanged is returned along with the error.
+func withClusterFederationIdNode(ctx context.Context, client *api.Client, nodeId string) (context.Context, error) {
+	clusterFederationId, _, err := clusterfederation.Default.GetNode(ctx, client, nodeId)
+	if err != nil {
+		return ctx, err
+	}
+	return api.WithClusterFederationId(ctx, clusterFederationId), nil
+}
+
+// withClusterFederationIdCluster retrieves the cluster federation ID for the given cluster and returns a new context
+// with it set. If the cluster federation ID cannot be retrieved, the original context unchanged is returned along with
+// the error.
+func withClusterFederationIdCluster(ctx context.Context, client *api.Client, clusterId string) (context.Context, error) {
+	clusterFederationId, _, err := clusterfederation.Default.GetCluster(ctx, client, clusterId)
+	if err != nil {
+		return ctx, err
+	}
+	return api.WithClusterFederationId(ctx, clusterFederationId), nil
 }
 
 func mcpToolOptionStringFilter(name, description string) mcp.ToolOption {
