@@ -16,8 +16,102 @@ limitations under the License.
 package api
 
 import (
+	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
+
+const testBaseURL = "http://test.invalid"
+
+func TestClusterFederationIdContextRoundTrip(t *testing.T) {
+	t.Run("empty id is not stored", func(t *testing.T) {
+		ctx := WithClusterFederationId(context.Background(), "")
+		if got := ClusterFederationIdFromContext(ctx); got != "" {
+			t.Errorf("expected empty cluster federation id, got %q", got)
+		}
+	})
+
+	t.Run("id round-trips", func(t *testing.T) {
+		ctx := WithClusterFederationId(context.Background(), "fed-abc")
+		if got := ClusterFederationIdFromContext(ctx); got != "fed-abc" {
+			t.Errorf("expected fed-abc, got %q", got)
+		}
+	})
+}
+
+func TestNewRequestClusterFederationHeader(t *testing.T) {
+	newTestClusterFederationClient := func(t *testing.T, staticHeaders http.Header) *Client {
+		t.Helper()
+		c, err := NewClient(testBaseURL, false, 0, "", staticHeaders)
+		if err != nil {
+			t.Fatalf("NewClient: %v", err)
+		}
+		return c
+	}
+
+	t.Run("no id means no header", func(t *testing.T) {
+		c := newTestClusterFederationClient(t, nil)
+		ctx := WithClusterFederationId(context.Background(), "")
+		req, apiErr := c.newRequest(ctx, http.MethodGet, "/v1/nodes/node-1", nil, nil)
+		if apiErr != nil {
+			t.Fatalf("newRequest: %v", apiErr)
+		}
+		if got := req.Header.Get(ClusterFederationIdHeader); got != "" {
+			t.Errorf("expected no cluster federation header, got %q", got)
+		}
+	})
+
+	t.Run("context id is set on request", func(t *testing.T) {
+		c := newTestClusterFederationClient(t, nil)
+		ctx := WithClusterFederationId(context.Background(), "fed-xyz")
+		req, apiErr := c.newRequest(ctx, http.MethodGet, "/v1/nodes/node-1", nil, nil)
+		if apiErr != nil {
+			t.Fatalf("newRequest: %v", apiErr)
+		}
+		if got := req.Header.Get(ClusterFederationIdHeader); got != "fed-xyz" {
+			t.Errorf("expected %q header, got %q", "fed-xyz", got)
+		}
+	})
+
+	t.Run("context id overrides static header", func(t *testing.T) {
+		static := make(http.Header)
+		static.Set(ClusterFederationIdHeader, "static-fed")
+		c := newTestClusterFederationClient(t, static)
+		ctx := WithClusterFederationId(context.Background(), "ctx-fed")
+		req, apiErr := c.newRequest(ctx, http.MethodGet, "/v1/nodes/node-1", nil, nil)
+		if apiErr != nil {
+			t.Fatalf("newRequest: %v", apiErr)
+		}
+		if got := req.Header.Get(ClusterFederationIdHeader); got != "ctx-fed" {
+			t.Errorf("expected context header to win with %q, got %q", "ctx-fed", got)
+		}
+	})
+}
+
+func TestClusterFederationHeaderOnWire(t *testing.T) {
+	var gotHeader string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotHeader = r.Header.Get(ClusterFederationIdHeader)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{}`))
+	}))
+	defer srv.Close()
+
+	client, err := NewClient(srv.URL, false, 0, "", nil)
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+
+	ctx := WithClusterFederationId(context.Background(), "fed-wire")
+	var out map[string]any
+	if apiErr := client.Get(ctx, "/v1/clusters/cls-1", nil, &out); apiErr != nil {
+		t.Fatalf("Get: %v", apiErr)
+	}
+	if gotHeader != "fed-wire" {
+		t.Errorf("expected %q header on the wire, got %q", "fed-wire", gotHeader)
+	}
+}
 
 func TestExpandPath(t *testing.T) {
 	tests := []struct {
