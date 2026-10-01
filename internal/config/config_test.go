@@ -160,7 +160,8 @@ func TestWithEnvDefaults(t *testing.T) {
 		{
 			name: "Timeout from environment",
 			initial: AppConfig{
-				PCEBaseURL: "https://api.example.com",
+				PCEBaseURL:        "https://api.example.com",
+				PCEDefaultTimeout: 5 * time.Second,
 			},
 			env: map[string]string{
 				EnvTimeout: "45",
@@ -168,21 +169,6 @@ func TestWithEnvDefaults(t *testing.T) {
 			expected: &AppConfig{
 				PCEBaseURL:        "https://api.example.com",
 				PCEDefaultTimeout: 45 * time.Second,
-			},
-			err: nil,
-		},
-		{
-			name: "Existing timeout is not overridden by environment",
-			initial: AppConfig{
-				PCEBaseURL:        "https://api.example.com",
-				PCEDefaultTimeout: 15 * time.Second,
-			},
-			env: map[string]string{
-				EnvTimeout: "60",
-			},
-			expected: &AppConfig{
-				PCEBaseURL:        "https://api.example.com",
-				PCEDefaultTimeout: 15 * time.Second,
 			},
 			err: nil,
 		},

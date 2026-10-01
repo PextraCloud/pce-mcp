@@ -88,7 +88,7 @@ type GetNodeLicenseByIdResponse struct {
 	Valid  bool   `json:"valid"`
 }
 
-func GetNodeLicenseById(ctx context.Context, c *Client, arg *GetNodeByIdArg) (*GetNodeLicenseByIdResponse, *APIError) {
+func GetNodeLicenseById(ctx context.Context, c *Client, arg *GetNodeLicenseByIdArg) (*GetNodeLicenseByIdResponse, *APIError) {
 	if arg == nil || arg.NodeId == "" {
 		return nil, NewAPIError(400, "node_id is required")
 	}

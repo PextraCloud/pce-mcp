@@ -91,13 +91,11 @@ func WithEnvDefaults(c AppConfig) (*AppConfig, error) {
 	}
 
 	// Timeout: env override if provided (validate on parse failure)
-	if c.PCEDefaultTimeout <= 0 {
-		if v := os.Getenv(EnvTimeout); v != "" {
-			if n, err := strconv.Atoi(v); err == nil && n > 0 {
-				c.PCEDefaultTimeout = time.Duration(n) * time.Second
-			} else {
-				return nil, validationError{msgs: []string{fmt.Sprintf("invalid %s: %s", EnvTimeout, v)}}
-			}
+	if v := os.Getenv(EnvTimeout); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			c.PCEDefaultTimeout = time.Duration(n) * time.Second
+		} else {
+			return nil, validationError{msgs: []string{fmt.Sprintf("invalid %s: %s", EnvTimeout, v)}}
 		}
 	}
 

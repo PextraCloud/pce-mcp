@@ -127,8 +127,10 @@ func (c *Client) newRequest(ctx context.Context, method, path string, query url.
 		}
 	}
 
-	// Authentication headers can be provided via c.Headers by callers.
-	// Avoid debug prints in production; use structured logging at call sites if needed.
+	// Apply the cluster federation ID from the context, if present.
+	if clusterFederationId := ClusterFederationIdFromContext(ctx); clusterFederationId != "" {
+		req.Header.Set(ClusterFederationIdHeader, clusterFederationId)
+	}
 
 	// caller may set Content-Type when body is provided
 	return req, nil

@@ -66,17 +66,18 @@ type DatacenterList struct {
 type DatacenterFull = DatacenterList
 
 type ClusterList struct {
-	Id             string `json:"id"`
-	OrganizationId string `json:"organization_id"`
-	DatacenterId   string `json:"datacenter_id"`
-	Name           string `json:"name"`
-	Creation       string `json:"creation"`
-	Description    string `json:"description"`
-	NodeCount      int    `json:"node_count"`
-	FaultTolerance int    `json:"fault_tolerance"`
-	Standalone     bool   `json:"standalone"`
-	LeaderId       string `json:"leader_id"`
-	HasLeader      bool   `json:"has_leader"`
+	Id                  string `json:"id"`
+	OrganizationId      string `json:"organization_id"`
+	DatacenterId        string `json:"datacenter_id"`
+	Name                string `json:"name"`
+	Creation            string `json:"creation"`
+	Description         string `json:"description"`
+	NodeCount           int    `json:"node_count"`
+	FaultTolerance      int    `json:"fault_tolerance"`
+	Standalone          bool   `json:"standalone"`
+	LeaderId            string `json:"leader_id"`
+	HasLeader           bool   `json:"has_leader"`
+	ClusterFederationId string `json:"cluster_federation_id,omitempty"`
 }
 
 type ClusterFull struct {
